@@ -1,0 +1,243 @@
+{
+  "entities": {
+    "UserPublicProfile": {
+      "title": "UserPublicProfile",
+      "description": "Public non-PII profile fields visible for storefront user presence and tier status.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user UID matching document owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Customer display name.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "description": "Account role.",
+          "enum": ["customer", "seller"]
+        },
+        "tier": {
+          "type": "string",
+          "description": "Membership rewards tier.",
+          "enum": ["Silver", "Gold", "Platinum"]
+        },
+        "loyaltyPoints": {
+          "type": "integer",
+          "description": "Current NEXORA Club loyalty balance."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when public profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when public profile was last updated."
+        }
+      },
+      "required": ["uid", "displayName", "role", "tier", "loyaltyPoints", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Strictly owner-only PII contact and wallet preferences.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user UID matching owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified account email address.",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "phone": {
+          "type": "string",
+          "description": "Primary contact phone number.",
+          "maxLength": 32
+        },
+        "defaultPinCode": {
+          "type": "string",
+          "description": "Preferred 6-digit Indian PIN code.",
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Saved catalog item under an authenticated user's wishlist.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user UID owning the wishlist entry.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Catalog product ID.",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productTitle": {
+          "type": "string",
+          "description": "Title of saved product.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "pricePaise": {
+          "type": "integer",
+          "description": "Snapshot price in paise."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "productId", "productTitle", "pricePaise", "createdAt", "updatedAt"]
+    },
+    "PriceAlertRecord": {
+      "title": "PriceAlertRecord",
+      "description": "User-configured target price notification threshold.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user UID owning the alert.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Target catalog product ID.",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productTitle": {
+          "type": "string",
+          "description": "Target catalog product title.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "targetPricePaise": {
+          "type": "integer",
+          "description": "Alert trigger price threshold in paise."
+        },
+        "currentPricePaise": {
+          "type": "integer",
+          "description": "Product price when alert was created."
+        },
+        "status": {
+          "type": "string",
+          "description": "Lifecycle status of alert.",
+          "enum": ["active", "triggered", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "productId", "productTitle", "targetPricePaise", "currentPricePaise", "status", "createdAt", "updatedAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Server-managed administrator membership record.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Admin user UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified administrator email.",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin access was granted."
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/public/{docId}": {
+      "schema": {
+        "$ref": "#/entities/UserPublicProfile"
+      },
+      "description": "Non-PII user display name, tier, and points scoped per user."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": {
+        "$ref": "#/entities/UserPrivateInfo"
+      },
+      "description": "Strictly owner-only PII contact info (email, phone, default PIN)."
+    },
+    "/users/{userId}/wishlist/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/WishlistItem"
+      },
+      "description": "Authenticated user's saved wishlist catalog products."
+    },
+    "/users/{userId}/priceAlerts/{alertId}": {
+      "schema": {
+        "$ref": "#/entities/PriceAlertRecord"
+      },
+      "description": "Authenticated user's target price drop alerts."
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminRecord"
+      },
+      "description": "Trusted administrator directory (read-only from client)."
+    }
+  }
+}

@@ -1,0 +1,2312 @@
+# NEXORA V3 — ULTIMATE ELITE EDITION
+## AI-Powered Multi-Vendor E-Commerce Marketplace
+
+**Brand:** NEXORA  
+**Tagline:** Discover More. Shop Smarter. Experience Beyond.  
+**AI Shopping Assistant:** NOVA  
+**Development Method:** Four-Agent Engineering Workflow  
+**Architecture:** MERN + TypeScript  
+**Primary Market:** India  
+**Currency:** INR (₹)  
+**Payment Gateway:** Razorpay (Test Mode)  
+**Primary Objective:** Build a sophisticated, secure, responsive, scalable and genuinely functional multi-vendor e-commerce marketplace.
+
+---
+
+# 0. YOUR MISSION
+
+You are not building a basic e-commerce website or a static UI prototype.
+
+You are building NEXORA V3, an ambitious multi-vendor e-commerce marketplace with the usability and functional depth expected of a serious commercial application.
+
+The experience should be comparable in quality and convenience to major marketplaces such as Amazon and Flipkart, while maintaining an original NEXORA identity.
+
+Do not copy their branding, assets, layouts or proprietary designs.
+
+The finished application should demonstrate:
+
+- Professional full-stack engineering.
+- Real customer, seller and administrator workflows.
+- Secure authentication and authorization.
+- Reliable inventory and order management.
+- Payment processing and financial records.
+- AI-assisted product discovery.
+- Excellent UI/UX and responsive behaviour.
+- Automated testing and reliable deployment.
+- Maintainable, documented architecture.
+
+**Critical rule:** A feature is not complete merely because its button, page or component exists. It must work end to end, connect to the correct backend functionality, handle errors and pass appropriate tests.
+
+Do not sacrifice functionality for visual appearance.
+
+Do not sacrifice security for convenience.
+
+Do not sacrifice maintainability for unnecessary complexity.
+
+---
+
+# 1. FOUR-AGENT ENGINEERING SYSTEM
+
+Use four specialised agents coordinated by one orchestrator.
+
+These agents are responsible for developing NEXORA, not merely describing what should be built.
+
+If the coding environment supports genuine sub-agents, use them. If it does not, execute the responsibilities sequentially and clearly report that limitation. Never pretend that parallel agents are running.
+
+## AGENT 1 — PLANNER
+
+**Responsibility:** Architecture, requirements and technical planning.
+
+The Planner must:
+
+1. Inspect the existing repository and understand its architecture.
+2. Identify incomplete, broken, duplicated and insecure functionality.
+3. Break the assigned phase into manageable engineering tasks.
+4. Define dependencies and implementation order.
+5. Plan database models, API contracts and application workflows.
+6. Identify technical risks and edge cases.
+7. Prevent unnecessary technologies and duplicated functionality.
+8. Maintain the implementation roadmap.
+
+Deliverables:
+
+- Architecture decisions.
+- Task breakdown.
+- Database and API plans.
+- Dependency map.
+- Risk assessment.
+- Acceptance criteria.
+
+## AGENT 2 — DESIGNER
+
+**Responsibility:** UI/UX, design systems and frontend experience.
+
+The Designer must:
+
+1. Establish an original NEXORA visual identity.
+2. Create reusable design tokens.
+3. Design responsive layouts.
+4. Maintain consistency across customer, seller and admin interfaces.
+5. Create appropriate loading, error, empty and success states.
+6. Implement accessible components.
+7. Design smooth animations without compromising performance.
+8. Test both independent dark and light themes.
+9. Avoid generic AI-generated template designs.
+
+Deliverables:
+
+- Design specifications.
+- Page layouts.
+- Component specifications.
+- Design tokens.
+- Responsive behaviour.
+- Interaction and animation guidelines.
+
+## AGENT 3 — BUILDER
+
+**Responsibility:** Actual implementation.
+
+The Builder must:
+
+1. Implement the approved architecture.
+2. Write clean, modular, typed code.
+3. Create frontend components and backend services.
+4. Implement API integrations.
+5. Connect the application to the real database.
+6. Implement business logic and validations.
+7. Handle errors and edge cases.
+8. Reuse existing working components.
+9. Avoid unnecessary dependencies.
+10. Document important implementation decisions.
+
+The Builder must not silently modify major architectural decisions.
+
+For substantial architectural changes, request approval.
+
+## AGENT 4 — TESTER
+
+**Responsibility:** Independent verification and quality assurance.
+
+The Tester must:
+
+1. Inspect the Builder's changes.
+2. Run actual lint, type-check, test and build commands.
+3. Test API endpoints.
+4. Test database operations.
+5. Test authentication and authorization.
+6. Test important customer, seller and administrator journeys.
+7. Test responsive behaviour.
+8. Identify security vulnerabilities.
+9. Verify error handling.
+10. Report defects with reproducible steps.
+
+The Tester must not simply approve work because the Builder says it works.
+
+## ORCHESTRATOR
+
+The Orchestrator coordinates all four agents.
+
+Required workflow:
+
+**Inspect → Plan → Design → Approve → Build → Test → Fix → Retest → Document → Commit**
+
+Maintain:
+
+- Shared task context.
+- Phase status.
+- Agent responsibilities.
+- Task identifiers.
+- Dependencies.
+- Execution history.
+- Failed task records.
+- Retry limits.
+- Acceptance criteria.
+- Final verification status.
+
+Maximum three focused repair attempts per individual issue before reporting it as blocked.
+
+Do not allow endless autonomous loops.
+
+---
+
+# 2. REPOSITORY AND DEVELOPMENT RULES
+
+You are working directly inside my existing repository.
+
+You must inspect the actual project before making changes.
+
+## Initial inspection
+
+Inspect:
+
+- Repository structure.
+- Existing source code.
+- package.json.
+- Lockfiles.
+- Git status.
+- Existing branches.
+- Environment configuration.
+- Frontend implementation.
+- Backend implementation.
+- Database connection.
+- Existing API routes.
+- Existing tests.
+- Deployment configuration.
+
+Preserve existing working functionality.
+
+Never rewrite the entire project blindly.
+
+Never replace a working implementation merely because you prefer a different approach.
+
+## Git rules
+
+1. Work on one implementation phase per session.
+2. Create a local branch for each phase.
+3. Use meaningful commits.
+4. Keep changes focused and reviewable.
+5. Never force-push.
+6. Never delete branches or rewrite Git history without explicit approval.
+7. Never push to a remote repository without my approval.
+8. Never deploy to production without my approval.
+9. Never expose secrets in commits.
+10. Inspect `git diff` before committing.
+
+Suggested branches:
+
+- `phase-0-audit`
+- `phase-1-foundation`
+- `phase-2-catalogue`
+- `phase-3-authentication`
+- `phase-4-marketplace`
+- `phase-5-checkout-payments`
+- `phase-6-orders-admin`
+- `phase-7-nova-ai`
+- `phase-8-hardening`
+
+Create a local recovery tag before significant implementation work when appropriate.
+
+## Approval requirements
+
+Ask before:
+
+- Deleting important files.
+- Dropping databases or collections.
+- Making breaking schema changes.
+- Replacing major architecture.
+- Changing authentication architecture.
+- Sending real emails or messages.
+- Performing real financial transactions.
+- Changing production settings.
+- Pushing code to remote repositories.
+- Deploying to production.
+
+You may perform ordinary local development, testing and non-destructive fixes without asking for every small decision.
+
+Record reasonable technical decisions in `docs/DECISIONS.md`.
+
+---
+
+# 3. PROJECT SCOPE AND USER ROLES
+
+NEXORA supports three primary account roles.
+
+## CUSTOMER
+
+Customers can:
+
+- Register and log in.
+- Verify their email.
+- Browse products.
+- Search and filter products.
+- View product details.
+- Compare products.
+- Browse seller storefronts.
+- Add products to their cart.
+- Maintain a wishlist.
+- Manage delivery addresses.
+- Apply eligible discounts when supported.
+- Complete checkout.
+- Pay using supported payment methods.
+- Track orders.
+- Request cancellations.
+- Request returns and refunds.
+- View invoices.
+- Manage account information.
+- Interact with NOVA.
+
+## SELLER
+
+Sellers can:
+
+- Apply for seller registration.
+- Submit required business information.
+- Receive administrator approval.
+- Create a public storefront.
+- Manage products.
+- Manage product variants.
+- Upload product photographs.
+- Manage inventory.
+- Receive customer orders.
+- Process seller-specific fulfilment.
+- Update shipment information.
+- View sales analytics.
+- View commissions.
+- View payable balances.
+- View payout records.
+- Respond to eligible return requests.
+
+A seller must never access another seller's private records.
+
+## ADMINISTRATOR
+
+Administrators can:
+
+- Manage users.
+- Approve or reject seller applications.
+- Moderate products.
+- Manage categories and brands.
+- Manage marketplace configurations.
+- Review orders.
+- Manage returns and refunds.
+- Configure commission rules.
+- Review financial records.
+- Manage seller payout records.
+- View audit logs.
+- Review platform analytics.
+- Manage operational settings.
+
+Protect administrator functionality with strong authorization and additional authentication safeguards.
+
+---
+
+# 4. LOCKED TECHNOLOGY STACK
+
+Use the following stack unless a genuine technical incompatibility requires a documented change and my approval.
+
+Do not install libraries simply because they are popular.
+
+## FRONTEND
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Zustand for suitable client state
+- TanStack Query for server state
+- React Hook Form
+- Zod
+- shadcn/ui
+- Radix UI
+- Lucide React
+- Sonner
+- Recharts
+- Motion for animations
+
+## BACKEND
+
+- Node.js
+- TypeScript
+- Express.js
+- REST API architecture
+- API versioning under `/api/v1`
+- Zod validation
+- Mongoose
+- JWT access tokens
+- Secure HTTP-only refresh cookies
+- Argon2id or an appropriately configured bcrypt implementation
+- Helmet
+- Strict CORS allow-list
+- express-rate-limit
+- Secure request handling and input sanitization
+
+## DATABASE
+
+- MongoDB Atlas
+- MongoDB transactions where required
+- Mongoose
+- Proper indexing
+- Schema validation
+- Unique constraints
+- Replica-set configuration for transactions
+
+Document the database architecture in `docs/DATABASE.md`.
+
+## PAYMENTS
+
+- Razorpay test mode.
+- Server-created payment orders.
+- Server-side amount verification.
+- Payment signature verification.
+- Webhook verification.
+- Idempotent webhook processing.
+- Refund workflow.
+
+Stripe is not in the Core scope.
+
+## MEDIA
+
+- Cloudinary.
+- Signed uploads.
+- File type validation.
+- File size restrictions.
+- Secure upload authorization.
+- Optimized responsive images.
+
+## AI
+
+Use a provider abstraction.
+
+Implement one actual provider, selected through environment configuration:
+
+- Gemini OR
+- Anthropic.
+
+Do not install multiple AI providers unnecessarily.
+
+Use validated tool calling.
+
+## TESTING
+
+- Vitest.
+- React Testing Library.
+- Supertest.
+- Playwright.
+
+## DEVOPS
+
+- Docker for local development.
+- Docker Compose where useful.
+- GitHub Actions.
+- ESLint.
+- TypeScript checks.
+- Automated tests.
+- Production build verification.
+- Deployment documentation for Vercel frontend and Render backend.
+
+## NOT INCLUDED IN CORE
+
+Do not add these technologies to Core without a specific requirement:
+
+- Redis.
+- Socket.IO.
+- Three.js.
+- React Three Fiber.
+- GSAP.
+- Lenis.
+- Elasticsearch.
+- Meilisearch.
+- Stripe.
+- Sentry.
+- PostHog.
+
+These may be introduced in the Stretch scope.
+
+Every significant dependency must have a reason documented in `docs/STACK.md`.
+
+---
+
+# 5. CORE E-COMMERCE FUNCTIONALITY
+
+Everything in this section is part of the required Core application.
+
+## A. Homepage
+
+Create an attractive, functional homepage containing:
+
+- Premium navigation.
+- NEXORA branding.
+- Hero section.
+- Search interface.
+- Product categories.
+- Featured products.
+- New arrivals.
+- Popular products based on real data.
+- Seller storefront highlights.
+- Relevant promotional sections.
+- Product recommendations when real recommendation logic exists.
+- Footer with support and policy links.
+
+Do not display fabricated popularity statistics or fake live sales.
+
+## B. Product Catalogue
+
+Implement:
+
+- Product creation.
+- Product editing.
+- Product deletion or archival.
+- Product variants.
+- SKU management.
+- Product images.
+- Product specifications.
+- Category assignment.
+- Brand assignment.
+- Seller ownership.
+- Price.
+- Available inventory.
+- Product status.
+- Product visibility.
+- Product moderation.
+
+Product detail pages must display:
+
+- Product name.
+- Product images.
+- Actual price.
+- Available variants.
+- Actual stock status.
+- Description.
+- Specifications.
+- Seller details.
+- Delivery information where configured.
+- Return eligibility.
+- Verified review information, if a real review system is implemented.
+
+Never generate fabricated product reviews or ratings.
+
+## C. Search and Discovery
+
+Implement:
+
+- Product search.
+- Category filtering.
+- Brand filtering.
+- Price range.
+- Availability filtering.
+- Sorting.
+- Pagination.
+- Search query persistence in URL.
+- Useful empty states.
+- Safe and efficient query handling.
+
+Use MongoDB indexes and text search in Core.
+
+Do not use unrestricted regular expressions or unbounded database queries.
+
+## D. Cart
+
+Implement:
+
+- Guest cart.
+- Authenticated cart.
+- Add to cart.
+- Remove items.
+- Quantity changes.
+- Variant validation.
+- Cart persistence.
+- Cart merge after login.
+
+The server must recalculate all prices.
+
+Never trust a price or total supplied by the browser.
+
+## E. Wishlist
+
+Implement:
+
+- Add product.
+- Remove product.
+- View wishlist.
+- Persist wishlist.
+- Validate product availability.
+
+## F. Customer Account
+
+Implement:
+
+- Profile.
+- Addresses.
+- Account security.
+- Order history.
+- Order details.
+- Return requests.
+- Refund status.
+- Invoice access.
+- Logout.
+- Session management.
+
+---
+
+# 6. AUTHENTICATION AND SESSION SECURITY
+
+Implement secure, production-conscious authentication.
+
+Required functionality:
+
+- Registration.
+- Login.
+- Logout.
+- Email verification.
+- Password recovery.
+- Password reset.
+- Refresh-token rotation.
+- Session revocation.
+- Multiple-device session visibility where practical.
+- Role-based authorization.
+- Ownership-based authorization.
+- Login rate limiting.
+- Account lockout or throttling strategy.
+- Secure password storage.
+
+## Token security
+
+Use:
+
+- Short-lived access tokens.
+- Secure HTTP-only refresh cookies.
+- Appropriate SameSite settings.
+- Secure cookie settings in production.
+- Refresh-token rotation.
+- Refresh-token reuse detection.
+- Server-side refresh-session records.
+- Revocation on logout and relevant security events.
+- Strong signing secrets.
+- Token expiry validation.
+- Explicit allowed signing algorithms.
+
+Do not store sensitive authentication tokens in localStorage.
+
+Protect cookie-authenticated state-changing requests against CSRF using an appropriate CSRF protection strategy.
+
+Use strict Origin and CORS validation.
+
+## Account security
+
+- Do not reveal whether an email address exists during sensitive account recovery operations.
+- Rate-limit login and password recovery.
+- Never log passwords, tokens or reset links.
+- Require stronger authentication for administrators.
+- Support multi-factor authentication for privileged accounts as a security requirement before production release.
+- Revoke sessions after password reset where appropriate.
+
+---
+
+# 7. MULTI-VENDOR MARKETPLACE ARCHITECTURE
+
+NEXORA is a marketplace, not merely a single-seller shop.
+
+Implement proper seller isolation.
+
+## Seller onboarding
+
+Workflow:
+
+Application → Business details → Document submission where required → Admin review → Approval or rejection → Seller activation.
+
+Keep document access private and controlled.
+
+Do not pretend that uploaded documents have been legally verified.
+
+## Seller store
+
+Each approved seller receives a public storefront containing:
+
+- Store name.
+- Logo.
+- Cover image.
+- Description.
+- Available products.
+- Store categories.
+- Public contact information as configured.
+- Store status.
+
+## Seller dashboard
+
+Include:
+
+- Overview.
+- Products.
+- Variants.
+- Inventory.
+- Orders.
+- Fulfilment.
+- Returns.
+- Sales.
+- Commissions.
+- Payable balances.
+- Payout records.
+- Store settings.
+
+All analytics must come from actual database records.
+
+## Order architecture
+
+Use:
+
+**Parent Order → Seller Sub-orders → Order Items**
+
+A single customer checkout may involve products from multiple sellers.
+
+Each seller must fulfil only their own sub-orders.
+
+The parent order provides the customer's consolidated view.
+
+The seller sub-orders track individual seller fulfilment and financial responsibility.
+
+---
+
+# 8. INVENTORY AND OVERSelling PREVENTION
+
+Inventory must be reliable under concurrent requests.
+
+Implement:
+
+- Variant-level stock.
+- Atomic stock changes.
+- Inventory reservations.
+- Reservation expiration.
+- Stock movement history.
+- Inventory adjustment records.
+- Reservation cleanup jobs.
+- Insufficient-stock handling.
+- Concurrent-checkout tests.
+
+Use atomic database operations and transactions where appropriate.
+
+Never rely only on frontend stock validation.
+
+## Critical payment-reservation edge case
+
+A payment may succeed after the inventory reservation expires.
+
+Handle this explicitly:
+
+1. Verify the payment event.
+2. Check the reservation and order state.
+3. Re-check stock atomically.
+4. If sufficient stock exists, create a valid reservation and continue according to the order policy.
+5. If sufficient stock does not exist, do not oversell.
+6. Initiate the appropriate refund or manual-review workflow.
+7. Record every financial and inventory adjustment.
+
+Never silently mark an unavailable order as fulfilled.
+
+Use idempotent scheduled jobs so stock is not released twice.
+
+---
+
+# 9. CHECKOUT AND ORDER MANAGEMENT
+
+Implement a complete checkout journey:
+
+1. Cart review.
+2. Contact information.
+3. Delivery address.
+4. Shipping eligibility and charges.
+5. Tax calculation.
+6. Final order review.
+7. Payment method.
+8. Payment confirmation.
+9. Order confirmation.
+
+## Checkout requirements
+
+- Server-side pricing.
+- Server-side tax calculations.
+- Server-side shipping calculations.
+- Inventory reservation.
+- Valid variant verification.
+- Order snapshots.
+- Payment state tracking.
+- Idempotent order creation.
+- Safe duplicate submission handling.
+
+Each order must preserve an immutable purchase snapshot containing the relevant:
+
+- Product name.
+- SKU.
+- Variant.
+- Unit price.
+- Quantity.
+- Discount.
+- Tax.
+- Shipping amount.
+- Seller.
+- Commission rule.
+- Final totals.
+
+Historical orders must not change when product prices or seller settings change.
+
+## Order lifecycle
+
+Design explicit, validated state transitions.
+
+Possible operational states:
+
+- Pending.
+- Confirmed.
+- Processing.
+- Packed.
+- Shipped.
+- Delivered.
+- Cancelled.
+- Return requested.
+- Returned.
+- Refund pending.
+- Refunded.
+
+Payment status and fulfilment status must be tracked separately.
+
+Do not permit invalid status transitions.
+
+Support partial cancellation and partial returns where feasible.
+
+---
+
+# 10. RAZORPAY PAYMENT SYSTEM
+
+Implement Razorpay in TEST MODE.
+
+Never process real payments without explicit authorization and a separate production-readiness review.
+
+## Required features
+
+- Server-created Razorpay orders.
+- Correct server-side amounts.
+- INR currency.
+- Payment signature verification.
+- Signed webhook verification.
+- Unique provider event tracking.
+- Idempotent event processing.
+- Payment status persistence.
+- Refund requests.
+- Refund status tracking.
+- Payment reconciliation.
+
+## Webhook security
+
+Verify webhook signatures using the appropriate raw request body and the correct configured secret.
+
+Process duplicate events safely.
+
+Handle retries safely.
+
+Handle out-of-order events.
+
+Store provider event identifiers with unique constraints.
+
+Persist an auditable event record.
+
+Never mark an order as paid solely because the browser displays a success message.
+
+## Payment state handling
+
+Explicitly handle:
+
+- Payment initiated.
+- Payment pending.
+- Payment captured.
+- Payment failed.
+- Payment cancelled.
+- Payment refunded.
+- Partially refunded.
+- Duplicate notifications.
+- Delayed success notifications.
+- Webhook delivery failures.
+
+Create a reconciliation process that compares local payment records with provider information when supported.
+
+Do not silently ignore mismatches.
+
+## Test strategy
+
+Use test credentials only.
+
+Use deterministic mocked provider boundaries for automated tests.
+
+Where available, also execute sandbox integration tests.
+
+Clearly distinguish verified sandbox functionality from actual production payment capability.
+
+---
+
+# 11. INDIAN MARKETPLACE REQUIREMENTS
+
+NEXORA initially targets India.
+
+## Currency
+
+- Display INR (₹).
+- Store money as integer paise.
+- Avoid floating-point arithmetic for financial calculations.
+- Use appropriate decimal or integer-based calculation logic.
+- Format money only at the presentation layer.
+
+## GST architecture
+
+Support configurable tax rules.
+
+Required data considerations:
+
+- Product HSN code.
+- Product-level GST rate.
+- Seller GSTIN where applicable.
+- Seller registration details.
+- Customer delivery state.
+- Place of supply.
+- CGST.
+- SGST.
+- IGST.
+- Inclusive and exclusive pricing configurations.
+- Tax breakdown.
+- Invoice details.
+- Credit-note records where applicable.
+
+Important rules:
+
+1. Do not hardcode assumptions that may not apply to every transaction.
+2. Do not invent GST rates or seller registration information.
+3. Calculate tax using configured, reviewed business rules.
+4. Store the applied tax details in the immutable order snapshot.
+5. Keep historical invoices unchanged after later configuration changes.
+6. Handle seller-specific invoicing and marketplace commission accounting correctly.
+7. Document assumptions requiring professional tax review.
+
+Do not claim legal or GST compliance merely because the software generates an invoice.
+
+## Address and delivery
+
+Support Indian addresses with:
+
+- Name.
+- Phone number.
+- Address lines.
+- City.
+- State.
+- Six-digit PIN code.
+- Optional landmark.
+
+Validate PIN code format.
+
+Use a configurable shipping-zone table in Core.
+
+Do not pretend to have live carrier serviceability or tracking without an actual provider integration.
+
+## Payment methods
+
+- Razorpay-supported test payment methods.
+- Cash on Delivery where eligible.
+
+COD eligibility should be configurable using:
+
+- Maximum order value.
+- PIN code serviceability.
+- Seller eligibility.
+- Optional COD charges.
+
+Do not present unsupported payment methods as available.
+
+---
+
+# 12. FINANCIAL LEDGER AND SELLER SETTLEMENTS
+
+Create reliable financial records.
+
+Required record categories:
+
+- Customer payment.
+- Seller order amount.
+- Marketplace commission.
+- Seller payable.
+- Refund.
+- Refund adjustment.
+- Commission adjustment.
+- Payout.
+- Settlement adjustment.
+
+Prefer an append-only, double-entry ledger design with immutable financial entries.
+
+Corrections must use reversal or adjustment entries, not silent modification of historical entries.
+
+Store:
+
+- Amount in paise.
+- Currency.
+- Transaction type.
+- Related order.
+- Related seller.
+- Related payment.
+- Timestamp.
+- Status.
+- Idempotency reference.
+- Audit information.
+
+## Commission engine
+
+Support configurable commission rules.
+
+Preserve the commission rule applied to each completed seller order.
+
+Changing future commission settings must not silently change historical financial calculations.
+
+## Payouts
+
+Core includes:
+
+- Seller payable balance.
+- Pending balance.
+- Eligible balance.
+- Payout records.
+- Manual settlement status.
+- Adjustment history.
+- Admin audit records.
+
+Actual bank transfers, KYC verification and regulated payout infrastructure are OUT OF SCOPE for Core.
+
+Never claim that a seller has received a bank transfer because an administrator clicked a settlement button.
+
+---
+
+# 13. RETURNS, CANCELLATIONS AND REFUNDS
+
+Implement:
+
+- Configurable return policies.
+- Product/category return windows.
+- Return eligibility.
+- Return request submission.
+- Return reason.
+- Return review.
+- Approval or rejection.
+- Return status.
+- Refund calculation.
+- Partial refund support where feasible.
+- Refund records.
+- Refund provider status.
+
+Validate that customers can only request eligible returns for their own orders.
+
+Prevent duplicate refunds.
+
+Prevent refund amounts from exceeding the eligible amount.
+
+A refund must have an associated financial record.
+
+COD refunds must be recorded accurately as manual/off-platform refunds unless a real refund integration exists.
+
+Never fabricate a successful refund.
+
+---
+
+# 14. NEXORA NOVA — AI SHOPPING ASSISTANT
+
+Build NOVA as an AI-powered shopping assistant.
+
+NOVA must help customers discover products using actual catalogue information.
+
+## Core capabilities
+
+- Search products.
+- Find products based on preferences.
+- Compare products.
+- Explain product specifications.
+- Find available variants.
+- Check configured return policies.
+- Answer delivery-related questions using available data.
+- Retrieve order status for an authenticated customer.
+- Recommend relevant products when supported by actual catalogue data.
+
+## Tools
+
+Implement validated tools such as:
+
+- `searchProducts`
+- `getProductDetails`
+- `compareProducts`
+- `getAvailableVariants`
+- `getReturnPolicy`
+- `getDeliveryInformation`
+- `getOrderStatus`
+
+Each tool must have:
+
+- Defined input schema.
+- Output schema.
+- Authorization checks.
+- Error handling.
+- Rate limiting.
+- Execution logging with sensitive data redacted.
+
+## AI reliability
+
+NOVA must:
+
+- Use actual product records.
+- Never invent a price.
+- Never invent stock availability.
+- Never invent product features.
+- Never invent discounts.
+- Never invent order status.
+- Clearly acknowledge missing information.
+- Handle provider failures.
+- Respect user authorization.
+- Protect sensitive customer information.
+
+## AI security
+
+Treat user input and retrieved product text as untrusted.
+
+Protect against prompt injection.
+
+The AI must never:
+
+- Access arbitrary database collections.
+- Generate and execute shell commands.
+- Execute arbitrary application code.
+- Bypass authorization.
+- Reveal another customer's information.
+- Reveal seller-private information.
+- Initiate purchases, cancellations or refunds without explicit user confirmation.
+
+Require confirmation before any permitted state-changing customer action.
+
+Do not send unnecessary personal information to the AI provider.
+
+Support cost limits and request throttling.
+
+---
+
+# 15. SECURITY AND DATA PRIVACY
+
+Security is a mandatory engineering requirement.
+
+## Backend security
+
+Implement:
+
+- Authentication middleware.
+- Role-based authorization.
+- Resource ownership checks.
+- Zod request validation.
+- Strict CORS.
+- Helmet.
+- Rate limiting.
+- Secure cookie settings.
+- Input sanitization.
+- Safe file uploads.
+- Error handling.
+- Secure logging.
+- Environment-based secrets.
+- Database access controls.
+
+## Authorization
+
+Every protected endpoint must validate:
+
+1. Is the user authenticated?
+2. Is the requested action allowed?
+3. Does the resource belong to this user or seller?
+4. Is the requested state transition valid?
+
+Do not depend on frontend route protection alone.
+
+## Upload protection
+
+Validate:
+
+- File type.
+- File size.
+- Upload permissions.
+- Image-processing rules.
+- Storage permissions.
+
+Never accept arbitrary executable uploads.
+
+## Privacy
+
+Design appropriate controls for:
+
+- Data minimization.
+- Consent where required.
+- Privacy-policy presentation.
+- Personal-data access.
+- Account deletion requests.
+- Data retention.
+- Sensitive-data redaction.
+- Audit-log privacy.
+- Secure backups.
+
+Implement relevant safeguards with applicable Indian privacy and data-protection requirements in mind.
+
+Do not make unsupported legal-compliance claims.
+
+Do not store payment card details.
+
+Avoid logging personal information, passwords, authentication tokens or sensitive documents.
+
+## Threat model
+
+Create `docs/THREAT_MODEL.md`.
+
+Include threats such as:
+
+- Account takeover.
+- Privilege escalation.
+- Cross-seller data leakage.
+- Cross-customer data leakage.
+- Price manipulation.
+- Coupon abuse if coupons are implemented.
+- Inventory overselling.
+- Payment replay.
+- Forged webhooks.
+- Duplicate refunds.
+- Malicious file uploads.
+- Prompt injection.
+- AI tool abuse.
+- Session theft.
+- CSRF.
+- XSS.
+- Rate-limit bypass.
+
+For each threat document:
+
+- Attack scenario.
+- Potential impact.
+- Mitigation.
+- Verification test.
+
+---
+
+# 16. PREMIUM NEXORA DESIGN SYSTEM
+
+Create a distinctive, high-quality visual experience.
+
+The design should look professionally designed, not like a generic AI-generated template.
+
+## Brand direction
+
+Original, premium, minimal, modern and editorial.
+
+Use the following palette as a starting point.
+
+### Dark theme
+
+- Obsidian black.
+- Midnight navy.
+- Graphite.
+- Electric blue.
+- Aurora cyan.
+- Soft silver.
+- Controlled violet accents.
+
+### Light theme
+
+- Pearl white.
+- Warm ivory.
+- Mist grey.
+- Icy blue.
+- Deep indigo.
+- Graphite.
+
+Dark mode and light mode must be independently designed.
+
+Do not simply invert the dark theme.
+
+## Design system
+
+Create shared tokens for:
+
+- Colours.
+- Typography.
+- Spacing.
+- Border radius.
+- Shadows.
+- Elevation.
+- Z-index.
+- Animation duration.
+- Responsive breakpoints.
+
+Store design decisions centrally.
+
+Document them in `docs/DESIGN.md`.
+
+## Typography
+
+Select one primary interface font and an optional display font.
+
+Use consistent font weights, sizes and line heights.
+
+## Components
+
+Create reusable:
+
+- Buttons.
+- Inputs.
+- Selects.
+- Dialogs.
+- Drawers.
+- Navigation.
+- Cards.
+- Product cards.
+- Badges.
+- Tables.
+- Pagination.
+- Toasts.
+- Skeletons.
+- Empty states.
+- Error states.
+- Form validation components.
+
+## Interaction
+
+Add purposeful:
+
+- Hover effects.
+- Page transitions.
+- Drawer animations.
+- Dropdown animations.
+- Subtle product-card motion.
+- Loading transitions.
+- Success feedback.
+
+Never make animation interfere with usability.
+
+Respect reduced-motion preferences.
+
+## Accessibility
+
+Follow WCAG 2.2 AA principles.
+
+Include:
+
+- Keyboard navigation.
+- Visible focus.
+- Accessible labels.
+- Appropriate colour contrast.
+- Semantic HTML.
+- Screen-reader-friendly components.
+- Reduced-motion support.
+
+## Responsive design
+
+Design intentionally for:
+
+- 360px mobile.
+- 768px tablet.
+- 1280px desktop.
+- Larger desktop screens.
+
+No horizontal overflow.
+
+No broken navigation.
+
+No unreadable tables.
+
+No unusable mobile checkout.
+
+---
+
+# 17. REQUIRED APPLICATION PAGES
+
+## Public/customer pages
+
+1. Homepage.
+2. Product listing.
+3. Category listing.
+4. Search results.
+5. Product detail.
+6. Seller storefront.
+7. Cart.
+8. Checkout.
+9. Payment result.
+10. Order confirmation.
+11. Customer login.
+12. Customer registration.
+13. Forgot password.
+14. Reset password.
+15. Email verification.
+16. Customer dashboard.
+17. Profile settings.
+18. Address management.
+19. Wishlist.
+20. Order history.
+21. Order details.
+22. Return requests.
+23. Refund status.
+24. About NEXORA.
+25. Contact/support.
+26. Privacy policy.
+27. Terms and conditions.
+28. Return and refund policy.
+29. Shipping policy.
+30. 404 page.
+31. Error page.
+
+Policy pages must contain approved project content or clearly marked draft content, not fabricated legal claims.
+
+## Seller pages
+
+1. Seller application.
+2. Seller onboarding.
+3. Seller dashboard.
+4. Store settings.
+5. Product management.
+6. Add product.
+7. Edit product.
+8. Variant management.
+9. Inventory.
+10. Seller orders.
+11. Fulfilment.
+12. Return management.
+13. Analytics.
+14. Commissions.
+15. Payable balances.
+16. Payout records.
+
+## Administrator pages
+
+1. Admin login.
+2. Admin overview.
+3. User management.
+4. Seller applications.
+5. Seller approval.
+6. Product moderation.
+7. Category management.
+8. Brand management.
+9. Order management.
+10. Return management.
+11. Refund management.
+12. Commission management.
+13. Financial ledger.
+14. Payout records.
+15. Audit logs.
+16. Platform settings.
+17. Operational monitoring.
+
+All dashboard metrics must be based on actual database records.
+
+Use clear loading, empty, error and permission-denied states.
+
+---
+
+# 18. DATABASE ARCHITECTURE
+
+Create well-defined models and relationships.
+
+Core model candidates:
+
+- User.
+- Session.
+- Seller.
+- SellerApplication.
+- Category.
+- Brand.
+- Product.
+- ProductVariant.
+- Inventory.
+- InventoryReservation.
+- StockMovement.
+- Cart.
+- Wishlist.
+- Address.
+- ParentOrder.
+- SellerOrder.
+- OrderItem.
+- Payment.
+- PaymentWebhookEvent.
+- Refund.
+- ReturnRequest.
+- CommissionRule.
+- LedgerEntry.
+- PayoutRecord.
+- AuditLog.
+- Notification.
+
+Add additional models only where justified.
+
+## Database rules
+
+- Add indexes for frequent queries.
+- Add unique constraints where needed.
+- Prevent duplicate payment event processing.
+- Validate status transitions.
+- Use transactions for related financial and inventory operations where appropriate.
+- Avoid unbounded document growth.
+- Avoid unnecessarily large embedded documents.
+- Use pagination for large result sets.
+- Define data retention rules.
+- Never expose internal identifiers or records without authorization checks.
+
+Use immutable snapshots for historical financial and order data.
+
+Create database documentation and a clear model relationship diagram.
+
+---
+
+# 19. API ARCHITECTURE
+
+Use versioned REST APIs:
+
+`/api/v1`
+
+Organize routes, controllers, services, models, validation schemas and middleware separately.
+
+Follow a consistent response structure.
+
+Example:
+
+Successful response:
+
+{
+  "success": true,
+  "data": {},
+  "message": "Operation completed successfully"
+}
+
+Error response:
+
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Please review the submitted information"
+  }
+}
+
+Do not expose stack traces or internal database errors to end users.
+
+Implement:
+
+- Input validation.
+- Authentication.
+- Authorization.
+- Pagination.
+- Sorting allow-lists.
+- Rate limiting.
+- Request tracing.
+- Consistent errors.
+- API documentation.
+
+Generate OpenAPI documentation for implemented endpoints.
+
+Do not document endpoints that do not exist.
+
+---
+
+# 20. TESTING AND QUALITY ASSURANCE
+
+A professional application must be tested.
+
+Use:
+
+- Vitest for unit tests.
+- React Testing Library for frontend components.
+- Supertest for backend API tests.
+- Playwright for end-to-end tests.
+
+## Unit testing
+
+Test:
+
+- Pricing.
+- Tax calculations.
+- Commission calculations.
+- Inventory logic.
+- Order transitions.
+- Authentication utilities.
+- Validation.
+- Refund calculations.
+
+## Integration testing
+
+Test:
+
+- Registration.
+- Login.
+- Session refresh.
+- Logout.
+- Seller authorization.
+- Product creation.
+- Product updates.
+- Cart operations.
+- Checkout.
+- Inventory reservation.
+- Payment verification.
+- Webhook processing.
+- Refund records.
+- Financial entries.
+
+## Security testing
+
+Prove that:
+
+- Seller A cannot access Seller B's private data.
+- Customer A cannot access Customer B's orders.
+- Customers cannot call admin functionality.
+- Sellers cannot modify marketplace commission settings.
+- A modified browser price cannot alter the final server-side amount.
+- Duplicate webhooks do not duplicate financial entries.
+- Forged webhooks are rejected.
+- Duplicate refunds are prevented.
+- Expired tokens cannot be used.
+- Unauthorized file uploads are rejected.
+
+## Concurrency testing
+
+Test simultaneous purchase attempts for limited inventory.
+
+Prove that overselling does not occur.
+
+Test reservation expiration and delayed successful payment events.
+
+## End-to-end testing
+
+At minimum, automate these workflows:
+
+**Customer journey:**
+
+Register → Verify → Login → Browse → Search → Product details → Add to cart → Checkout → Test payment → Order confirmation → Order history.
+
+**Seller journey:**
+
+Apply → Admin approval → Create store → Add product → Manage inventory → Receive order → Fulfil order.
+
+**Admin journey:**
+
+Login → Review seller application → Approve seller → Moderate product → Review order → Review financial records.
+
+## Test honesty
+
+Never claim:
+
+- Tests pass without running them.
+- Builds succeed without building.
+- Payments work without integration verification.
+- Deployment works without deployment verification.
+- Accessibility passes without testing.
+- Security is complete without meaningful verification.
+
+Report exact commands and their actual results.
+
+---
+
+# 21. PERFORMANCE AND RELIABILITY
+
+Build for reliable operation, not merely a successful local demonstration.
+
+## Performance
+
+Measure and improve:
+
+- Largest Contentful Paint.
+- Interaction to Next Paint.
+- Cumulative Layout Shift.
+- JavaScript bundle size.
+- Image loading.
+- API response time.
+- Database query performance.
+
+Targets:
+
+- LCP ≤ 2.5 seconds.
+- INP ≤ 200 milliseconds.
+- CLS ≤ 0.1.
+
+These are targets to measure, not claims to make without evidence.
+
+Create `docs/PERFORMANCE.md` with actual measurements.
+
+## Reliability
+
+Implement:
+
+- Centralized error handling.
+- Graceful provider failure.
+- Database connection recovery.
+- Safe retries.
+- Request timeouts.
+- Idempotent background jobs.
+- Structured logs.
+- Health endpoints.
+- Operational status reporting.
+
+Do not retry financial operations blindly.
+
+---
+
+# 22. DEPLOYMENT, BACKUPS AND PRODUCTION READINESS
+
+Core development must be deployable to a staging environment.
+
+## Environment configuration
+
+Create:
+
+- `.env.example`
+- Environment validation.
+- Local development configuration.
+- Test configuration.
+- Staging configuration.
+- Production configuration documentation.
+
+Never commit `.env` files containing secrets.
+
+Never place API keys in frontend source code.
+
+Never expose database credentials.
+
+Use hosting-provider secret management for deployed services.
+
+## CI/CD
+
+Use GitHub Actions for:
+
+- Dependency installation.
+- Lint.
+- Type checking.
+- Unit tests.
+- Integration tests where configured.
+- Production build.
+- Required verification checks.
+
+A failed required check must fail the workflow.
+
+## Backups
+
+Document:
+
+- Database backup strategy.
+- Backup retention.
+- Access controls.
+- Recovery procedure.
+- Restore verification.
+- Recovery responsibilities.
+
+Do not claim backups work without testing restoration.
+
+## Migrations
+
+Handle schema and index changes carefully.
+
+Use reviewed, repeatable migration or migration-like scripts.
+
+Document rollback or forward-recovery procedures.
+
+Do not execute destructive production migrations without explicit approval.
+
+## Monitoring
+
+Define production monitoring requirements for:
+
+- Application health.
+- API errors.
+- Database connectivity.
+- Payment webhook failures.
+- Background job failures.
+- Authentication anomalies.
+- Financial reconciliation mismatches.
+
+Sentry may be considered in Stretch.
+
+## Production readiness gate
+
+Do not label the application production-ready until it has passed:
+
+- Security review.
+- Authentication review.
+- Authorization review.
+- Payment review.
+- Financial reconciliation review.
+- Data backup and restore verification.
+- Performance measurement.
+- Accessibility review.
+- Deployment verification.
+- Operational monitoring review.
+- Applicable legal and business review.
+
+A successful Vercel or Render deployment alone does not mean production readiness.
+
+---
+
+# 23. IMPLEMENTATION ROADMAP
+
+Implement the application in controlled phases.
+
+**Work on ONE phase per session.**
+
+Do not jump ahead without completing the current phase's acceptance criteria.
+
+## PHASE 0 — REPOSITORY AUDIT
+
+Inspect the complete existing repository.
+
+Identify:
+
+- Broken features.
+- Missing features.
+- Existing dependencies.
+- Build failures.
+- Security issues.
+- Database issues.
+- Technical debt.
+- UI inconsistencies.
+- Deployment issues.
+
+Create:
+
+`docs/AUDIT.md`
+
+Include:
+
+- Current architecture.
+- Existing functionality.
+- Broken functionality.
+- Security findings.
+- Missing functionality.
+- Priority ranking.
+- Recommended implementation sequence.
+
+Create a local recovery Git tag when appropriate.
+
+**Gate:** Present the audit and prioritized roadmap. Do not implement feature code during this phase.
+
+## PHASE 1 — FOUNDATION
+
+Implement:
+
+- Project structure.
+- Environment configuration.
+- Frontend setup.
+- Backend setup.
+- MongoDB connection.
+- API architecture.
+- Centralized errors.
+- Logging foundations.
+- Linting.
+- TypeScript checks.
+- Test setup.
+- CI.
+- Design tokens.
+- Independent dark and light themes.
+- Shared component library.
+
+**Gate:**
+
+Frontend and backend build and start successfully.
+
+Required CI checks pass.
+
+## PHASE 2 — CATALOGUE AND DISCOVERY
+
+Implement:
+
+- Database catalogue models.
+- Categories.
+- Brands.
+- Products.
+- Variants.
+- Inventory foundation.
+- Seed script.
+- Homepage.
+- Product listing.
+- Search.
+- Filters.
+- Sorting.
+- Pagination.
+- Product details.
+
+**Gate:**
+
+Products load from the database.
+
+Search and filters work correctly.
+
+Responsive layouts work in both themes.
+
+## PHASE 3 — AUTHENTICATION AND CUSTOMER
+
+Implement:
+
+- Registration.
+- Email verification.
+- Login.
+- Logout.
+- Refresh-token rotation.
+- Password recovery.
+- Session revocation.
+- Role-based access.
+- Ownership-based authorization.
+- Customer profiles.
+- Address management.
+- Wishlist.
+- Guest cart.
+- Cart merge.
+
+**Gate:**
+
+Authentication and authorization tests pass.
+
+## PHASE 4 — MULTI-VENDOR MARKETPLACE
+
+Implement:
+
+- Seller applications.
+- Seller approval.
+- Storefronts.
+- Seller dashboard.
+- Product management.
+- Product variants.
+- Cloudinary uploads.
+- Seller inventory.
+- Seller order access.
+- Seller analytics.
+- Commission configuration.
+
+**Gate:**
+
+Seller A cannot access Seller B's private records.
+
+Tests must prove seller isolation.
+
+## PHASE 5 — CHECKOUT AND PAYMENTS
+
+Implement:
+
+- Cart validation.
+- Server-side pricing.
+- GST configuration.
+- Shipping zones.
+- COD rules.
+- Inventory reservations.
+- Atomic inventory updates.
+- Reservation expiration.
+- Razorpay test orders.
+- Signature verification.
+- Webhook verification.
+- Idempotent payment handling.
+- Payment reconciliation foundation.
+- Parent orders.
+- Seller sub-orders.
+- Immutable purchase snapshots.
+- Financial records.
+
+**Gate:**
+
+Concurrent checkout tests prove no overselling.
+
+Forged and duplicate webhook tests pass.
+
+Delayed payment and reservation-expiration scenarios are tested.
+
+## PHASE 6 — ORDERS, RETURNS AND ADMIN
+
+Implement:
+
+- Order management.
+- Seller fulfilment.
+- Customer order tracking.
+- Cancellation workflows.
+- Return requests.
+- Refund workflows.
+- Commission calculations.
+- Ledger entries.
+- Seller payable balances.
+- Payout records.
+- Admin dashboard.
+- Seller approvals.
+- Product moderation.
+- Audit logs.
+- Real-data analytics.
+
+**Gate:**
+
+Critical order lifecycle E2E tests pass.
+
+Financial records reconcile correctly in the test environment.
+
+## PHASE 7 — NOVA AI
+
+Implement:
+
+- AI provider abstraction.
+- One actual AI provider.
+- Product search tools.
+- Product detail tools.
+- Comparison tools.
+- Variant tools.
+- Return policy tools.
+- Order status tools.
+- Grounded responses.
+- Authorization controls.
+- Prompt-injection safeguards.
+- Confirmation before state-changing actions.
+- Cost and rate limits.
+
+**Gate:**
+
+Tests prove grounding, authorization, failure handling and prompt-injection resistance.
+
+## PHASE 8 — HARDENING AND DELIVERY
+
+Complete:
+
+- Security review.
+- Threat-model review.
+- Performance testing.
+- Accessibility review.
+- Bundle analysis.
+- API documentation.
+- Automated E2E tests.
+- Database recovery documentation.
+- CI verification.
+- Staging deployment guide.
+- README.
+- Architecture diagram.
+- Screenshots.
+- Final feature status report.
+
+**Gate:**
+
+All required Core acceptance criteria are verified or explicitly reported as blocked.
+
+Do not conceal unresolved issues.
+
+---
+
+# 24. STRETCH FEATURES — OPTIONAL ADVANCED EDITION
+
+Only start these after the Core application is verified.
+
+Each feature must have its own plan, implementation and test criteria.
+
+## S1 — REAL-TIME NOTIFICATIONS
+
+- Socket.IO.
+- Authenticated rooms.
+- Order updates.
+- Seller notifications.
+- Admin notifications.
+- Reconnection handling.
+
+Never expose another user's notifications.
+
+## S2 — RECOMMENDATION ENGINE
+
+- Behaviour-based recommendations.
+- Wishlist-based suggestions.
+- Category interests.
+- Related products.
+- Explainable recommendations.
+
+Use actual product data.
+
+## S3 — ADVANCED PRICE WATCH
+
+- Real recorded price history.
+- Price alerts.
+- Historical charts.
+- Notification preferences.
+
+Never invent past prices.
+
+## S4 — LOYALTY AND PROMOTIONS
+
+- Loyalty points.
+- Bundles.
+- Flash sales.
+- Discount campaigns.
+- Coupon rules.
+
+Validate all benefits on the server.
+
+## S5 — ADVANCED VISUAL EXPERIENCE
+
+- Three.js.
+- React Three Fiber.
+- Drei.
+- Optional 3D product displays.
+- Interactive category experiences.
+- Cinematic homepage interactions.
+
+Only use actual 3D assets.
+
+Provide a fallback for devices without WebGL support.
+
+Do not let 3D slow down ordinary shopping.
+
+## S6 — ADVANCED SEARCH
+
+- MongoDB Atlas Search.
+- Autocomplete.
+- Search suggestions.
+- More advanced relevance ranking.
+
+## S7 — NEXORA CORE: IN-APP AI AGENT COMMAND CENTRE
+
+This is an optional feature INSIDE the NEXORA application.
+
+It is separate from the four development agents used by the coding environment.
+
+NEXORA CORE may contain:
+
+- Planner.
+- Designer.
+- Builder.
+- Tester.
+- Task orchestration.
+- Persistent task state.
+- Execution history.
+- Structured outputs.
+- Audit logs.
+- Bounded retries.
+- Timeouts.
+- Cancellation.
+- Permission controls.
+
+Safety requirements:
+
+1. Agents must never execute arbitrary shell commands.
+2. Agents must never execute arbitrary generated code.
+3. Tester must use an allow-list of approved commands.
+4. Builder must propose changes through reviewable diffs.
+5. Destructive changes require approval.
+6. Financial or production actions require explicit approval.
+7. Show only real orchestration state.
+8. Never fabricate progress.
+
+## S8 — ADVANCED OPERATIONS
+
+Consider:
+
+- Sentry.
+- Analytics.
+- Advanced monitoring.
+- Operational reporting.
+- Additional search infrastructure.
+
+Add these only when justified.
+
+---
+
+# 25. DESIGN AND FEATURE COMPLETION CHECKLIST
+
+Every major screen must have:
+
+- Responsive layout.
+- Loading state.
+- Skeleton state where appropriate.
+- Empty state.
+- Error state.
+- Success state.
+- Disabled state.
+- Hover state.
+- Focus state.
+- Form validation.
+- Permission handling.
+
+Every major feature must have:
+
+- Frontend implementation.
+- Backend implementation.
+- Database integration.
+- Server-side validation.
+- Authorization.
+- Error handling.
+- Tests.
+- Documentation.
+
+A visually complete but non-functional component is not complete.
+
+A frontend-only feature must be marked as incomplete.
+
+A mocked integration must never be described as a live integration.
+
+---
+
+# 26. FINAL FEATURE STATUS CLASSIFICATION
+
+Use these exact labels:
+
+**VERIFIED** — Implemented and successfully tested with recorded evidence.
+
+**IMPLEMENTED-UNVERIFIED** — Code exists, but complete verification has not been performed.
+
+**PARTIAL** — Some functionality exists, but the feature is incomplete.
+
+**BLOCKED** — Implementation depends on unavailable credentials, external services or required approval.
+
+**NOT DONE** — Not implemented.
+
+Never inflate feature status.
+
+Never use "100% complete" without evidence.
+
+---
+
+# 27. REQUIRED DOCUMENTATION
+
+Maintain:
+
+- `README.md`
+- `docs/AUDIT.md`
+- `docs/ARCHITECTURE.md`
+- `docs/DATABASE.md`
+- `docs/STACK.md`
+- `docs/DESIGN.md`
+- `docs/DECISIONS.md`
+- `docs/THREAT_MODEL.md`
+- `docs/PERFORMANCE.md`
+- `docs/API.md` or generated OpenAPI documentation
+- `docs/DEPLOYMENT.md`
+- `docs/ENVIRONMENT.md`
+- `docs/TESTING.md`
+- `docs/PRODUCTION_READINESS.md`
+
+Keep documentation aligned with the actual implementation.
+
+Do not document imaginary features.
+
+---
+
+# 28. MANDATORY END-OF-PHASE REPORT
+
+At the end of every phase, provide:
+
+## 1. Phase summary
+What was accomplished.
+
+## 2. Files changed
+Important files created, edited or removed.
+
+## 3. Agent contributions
+What Planner, Designer, Builder and Tester actually did.
+
+## 4. Commands executed
+Show actual terminal commands.
+
+## 5. Test results
+Show real test and build results.
+
+## 6. Feature status
+Use the five required status labels.
+
+## 7. Remaining issues
+List unresolved problems honestly.
+
+## 8. Security findings
+Report relevant security concerns.
+
+## 9. Git status
+Show the branch, commit status and local changes.
+
+## 10. Next phase
+Explain prerequisites and the next recommended phase.
+
+Provide a meaningful suggested commit message.
+
+Do not claim that any unexecuted operation succeeded.
+
+---
+
+# 29. DEFINITION OF DONE
+
+A feature is considered complete only when:
+
+1. Requirements are understood.
+2. The Planner's task breakdown is approved.
+3. The relevant design is specified.
+4. Code is implemented.
+5. Type checks pass.
+6. Lint checks pass.
+7. Appropriate tests are written.
+8. Tests are executed.
+9. Important manual workflows are checked.
+10. Errors and edge cases are handled.
+11. Authorization is verified.
+12. Documentation is updated.
+13. Changes are reviewed.
+14. A meaningful local commit is created.
+
+If any required step is missing, mark the feature as incomplete or unverified.
+
+---
+
+# 30. STARTING INSTRUCTION
+
+Do not immediately start generating the entire application.
+
+First inspect the existing repository.
+
+Then begin Phase 0.
+
+Your first response must contain:
+
+1. Repository structure summary.
+2. Existing technology stack.
+3. Existing features.
+4. Broken or missing functionality.
+5. Security concerns.
+6. Build and test status.
+7. Prioritized implementation roadmap.
+
+Create `docs/AUDIT.md`.
+
+Do not write feature code during Phase 0.
+
+After the audit, stop and wait for my next instruction.
+
+I will tell you:
+
+**"EXECUTE PHASE 1"**
+
+or the next phase I want to run.
+
+When I say "EXECUTE PHASE N", execute only that phase.
+
+Do not skip acceptance criteria.
+
+Do not rush.
+
+Do not fake results.
+
+Do not make unnecessary architectural changes.
+
+Do not install every available technology.
+
+Do not claim production readiness prematurely.
+
+Build NEXORA V3 as a real, secure, maintainable and thoroughly tested software product.
+
+**THE GOAL IS NOT TO BUILD THE BIGGEST E-COMMERCE WEBSITE. THE GOAL IS TO BUILD THE BEST-ENGINEERED NEXORA MARKETPLACE THAT WE CAN ACTUALLY VERIFY.**

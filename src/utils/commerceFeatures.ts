@@ -54,16 +54,17 @@ export function getLoyaltyTier(points: number): 'Silver' | 'Gold' | 'Platinum' {
  */
 export function validatePromoCode(
   inputCode: string,
-  subtotalPaise: number
+  subtotalPaise: number,
+  promoCatalog: Record<string, PromoDiscount> = VALID_PROMO_CODES
 ): { valid: boolean; discountPaise: number; message: string; promo?: PromoDiscount } {
   const normalized = (inputCode || '').trim().toUpperCase();
-  const promo = VALID_PROMO_CODES[normalized];
+  const promo = promoCatalog[normalized];
 
-  if (!promo) {
+  if (!promo || promo.isActive === false) {
     return {
       valid: false,
       discountPaise: 0,
-      message: 'Invalid promo code. Try NEXORA10 or FESTIVE500.',
+      message: 'Invalid or inactive promo code. Try NEXORA10 or FESTIVE500.',
     };
   }
 
@@ -132,7 +133,8 @@ export function getOrderProgressPercent(stage: OrderStage): number {
  */
 export function generateTrackingTimeline(
   currentStage: OrderStage,
-  orderDateStr: string = '09 Nov 2026'
+  orderDateStr: string = '09 Nov 2026',
+  destinationLabel: string = 'Customer Doorstep (PIN 110001)'
 ): TrackingCheckpoint[] {
   const stages: OrderStage[] = ['Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
   const currentIndex = stages.indexOf(currentStage);
@@ -155,14 +157,14 @@ export function generateTrackingTimeline(
     {
       stage: 'Out for Delivery',
       timestamp: `${orderDateStr}, 08:30 AM`,
-      location: 'Central Delivery Hub, Connaught Place, New Delhi',
-      description: 'Assigned to courier executive (Ramesh Kumar · +91 98112 33445). Doorstep delivery scheduled.',
+      location: `Last-Mile Courier Hub · ${destinationLabel}`,
+      description: 'Assigned to BlueDart courier executive (Ramesh Kumar). Doorstep OTP delivery scheduled.',
       completed: currentIndex >= 2,
     },
     {
       stage: 'Delivered',
       timestamp: `${orderDateStr}, 01:22 PM`,
-      location: 'Customer Doorstep (PIN 110001)',
+      location: destinationLabel,
       description: 'Secure delivery completed. OTP verified and digital signature captured.',
       completed: currentIndex >= 3,
     },
@@ -172,7 +174,7 @@ export function generateTrackingTimeline(
     checkpoints.push({
       stage: 'Return Requested',
       timestamp: `${orderDateStr}, 04:00 PM`,
-      location: 'Reverse Logistics Hub, Delhi',
+      location: `Reverse Logistics Pickup · ${destinationLabel}`,
       description: 'Return request registered. Reverse doorstep pickup scheduled with courier.',
       completed: true,
     });
@@ -711,5 +713,150 @@ export function applyOrderWalletAndPoints(params: {
     redeemedPoints,
   };
 }
+
+/**
+ * Validates an Indian 6-digit postal PIN code (cannot start with 0)
+ */
+export function validateIndianPinCode(pin: string): { valid: boolean; error?: string } {
+  const trimmed = (pin || '').trim();
+  if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
+    return { valid: false, error: 'Enter a valid 6-digit Indian PIN code (e.g. 110001)' };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validates a 15-character Indian GSTIN format
+ */
+export function validateGstin(gstin: string): { valid: boolean; error?: string } {
+  const trimmed = (gstin || '').trim().toUpperCase();
+  if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(trimmed)) {
+    return { valid: false, error: 'Enter a valid 15-character GSTIN (e.g. 29AAACL1234F1Z8)' };
+  }
+  return { valid: true };
+}
+
+/**
+ * Maps product category slugs to standard Indian HSN codes
+ */
+export function getProductHsnCode(categorySlug?: string): string {
+  switch ((categorySlug || '').toLowerCase()) {
+    case 'smartphones':
+      return '85171300';
+    case 'audio':
+      return '85183000';
+    case 'keyboards':
+      return '84716040';
+    case 'timepieces':
+    case 'watches':
+      return '91021100';
+    case 'workspace':
+      return '94033090';
+    case 'accessories':
+      return '85044090';
+    default:
+      return '85183000';
+  }
+}
+
+const INDIAN_STATE_CODES: Record<string, string> = {
+  delhi: 'Delhi (07)',
+  'new delhi': 'Delhi (07)',
+  maharashtra: 'Maharashtra (27)',
+  karnataka: 'Karnataka (29)',
+  haryana: 'Haryana (06)',
+  telangana: 'Telangana (36)',
+  'tamil nadu': 'Tamil Nadu (33)',
+  'uttar pradesh': 'Uttar Pradesh (09)',
+  gujarat: 'Gujarat (24)',
+  'west bengal': 'West Bengal (19)',
+  rajasthan: 'Rajasthan (08)',
+  kerala: 'Kerala (32)',
+  punjab: 'Punjab (03)',
+};
+
+/**
+ * Resolves Indian GST Place of Supply state name with numeric state code
+ */
+export function getIndianStateCode(state?: string): string {
+  const raw = (state || '').trim();
+  if (!raw) return 'Delhi (07)';
+  const normalized = raw.toLowerCase();
+  return INDIAN_STATE_CODES[normalized] || `${raw} (07)`;
+}
+
+/**
+ * Determines whether an order is eligible for customer self-service cancellation
+ */
+export function canCancelOrder(order: Pick<UserOrder, 'status' | 'trackingStage'>): boolean {
+  if (order.status === 'Cancelled' || order.status === 'Delivered' || order.status === 'Returned' || order.status === 'Return Requested') {
+    return false;
+  }
+  return order.status === 'Processing' || order.status === 'Confirmed' || order.trackingStage === 'Processing';
+}
+
+const ORDER_STAGE_TRANSITIONS: Record<string, string[]> = {
+  Processing: ['Dispatched', 'Out for Delivery', 'Delivered'],
+  Dispatched: ['Out for Delivery', 'Delivered'],
+  'Out for Delivery': ['Delivered'],
+  Delivered: ['Return Requested'],
+  'Return Requested': ['Returned'],
+  Returned: [],
+};
+
+/**
+ * Validates forward order fulfillment transitions for Seller/Admin portals
+ */
+export function canTransitionOrderStage(currentStage: string, nextStage: string): boolean {
+  if (currentStage === nextStage) return true;
+  return (ORDER_STAGE_TRANSITIONS[currentStage] || []).includes(nextStage);
+}
+
+/**
+ * Computes authoritative order pricing (subtotal, coupon discount, shipping, inclusive 18% GST)
+ */
+export function calculateAuthoritativeOrderPricing(
+  items: Array<{ unitPricePaise: number; quantity: number }>,
+  promoCode?: string,
+  promoCatalog: Record<string, PromoDiscount> = VALID_PROMO_CODES,
+  freeShippingThresholdPaise: number = 99900
+): {
+  subtotalPaise: number;
+  discountPaise: number;
+  shippingPaise: number;
+  totalPaise: number;
+  gstPaise: number;
+  appliedPromoCode?: string;
+} {
+  const subtotalPaise = items.reduce(
+    (sum, i) => sum + Math.max(0, Math.round(i.unitPricePaise)) * Math.max(1, Math.round(i.quantity)),
+    0
+  );
+
+  let discountPaise = 0;
+  let appliedPromoCode: string | undefined;
+  if (promoCode && promoCode.trim()) {
+    const check = validatePromoCode(promoCode, subtotalPaise, promoCatalog);
+    if (check.valid && check.promo) {
+      discountPaise = check.discountPaise;
+      appliedPromoCode = check.promo.code;
+    }
+  }
+
+  const shippingPaise = subtotalPaise === 0 || subtotalPaise >= freeShippingThresholdPaise ? 0 : 9900;
+  const totalPaise = Math.max(0, subtotalPaise - discountPaise) + shippingPaise;
+  const taxableValue = Math.round(totalPaise / 1.18);
+  const gstPaise = Math.max(0, totalPaise - taxableValue);
+
+  return {
+    subtotalPaise,
+    discountPaise,
+    shippingPaise,
+    totalPaise,
+    gstPaise,
+    appliedPromoCode,
+  };
+}
+
 
 

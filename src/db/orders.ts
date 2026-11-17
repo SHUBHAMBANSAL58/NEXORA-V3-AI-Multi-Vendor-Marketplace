@@ -18,10 +18,16 @@ export async function getUserOrdersByUid(uid: string): Promise<UserOrder[]> {
         estimatedDeliveryDate: orders.estimatedDeliveryDate,
         paymentMethod: orders.paymentMethod,
         itemsJson: orders.itemsJson,
+        deliveryAddressJson: orders.deliveryAddressJson,
         preferredDeliveryDate: orders.preferredDeliveryDate,
         orderNotes: orders.orderNotes,
         isGiftReceipt: orders.isGiftReceipt,
         giftMessage: orders.giftMessage,
+        cancelledAt: orders.cancelledAt,
+        cancellationReason: orders.cancellationReason,
+        returnInfoJson: orders.returnInfoJson,
+        promoCode: orders.promoCode,
+        discountPaise: orders.discountPaise,
       })
       .from(orders)
       .innerJoin(users, eq(orders.userId, users.id))
@@ -40,10 +46,16 @@ export async function getUserOrdersByUid(uid: string): Promise<UserOrder[]> {
       estimatedDeliveryDate: row.estimatedDeliveryDate,
       paymentMethod: row.paymentMethod,
       items: row.itemsJson,
+      deliveryAddress: row.deliveryAddressJson ?? undefined,
       preferredDeliveryDate: row.preferredDeliveryDate ?? undefined,
       orderNotes: row.orderNotes ?? undefined,
       isGiftReceipt: row.isGiftReceipt ?? false,
       giftMessage: row.giftMessage ?? undefined,
+      cancelledAt: row.cancelledAt ?? undefined,
+      cancellationReason: row.cancellationReason ?? undefined,
+      returnInfo: row.returnInfoJson ?? undefined,
+      promoCode: row.promoCode ?? undefined,
+      discountPaise: row.discountPaise ?? undefined,
     }));
   } catch (error) {
     console.error('Database query failed in getUserOrdersByUid:', error);
@@ -68,10 +80,16 @@ export async function saveUserOrder(userId: number, order: UserOrder): Promise<U
         estimatedDeliveryDate: order.estimatedDeliveryDate,
         paymentMethod: order.paymentMethod,
         itemsJson: order.items,
+        deliveryAddressJson: order.deliveryAddress ?? null,
         preferredDeliveryDate: order.preferredDeliveryDate ?? null,
         orderNotes: order.orderNotes ?? null,
         isGiftReceipt: Boolean(order.isGiftReceipt),
         giftMessage: order.giftMessage ?? null,
+        cancelledAt: order.cancelledAt ?? null,
+        cancellationReason: order.cancellationReason ?? null,
+        returnInfoJson: order.returnInfo ?? null,
+        promoCode: order.promoCode ?? null,
+        discountPaise: order.discountPaise ?? null,
       })
       .onConflictDoNothing({ target: orders.orderCode });
 
@@ -79,6 +97,26 @@ export async function saveUserOrder(userId: number, order: UserOrder): Promise<U
   } catch (error) {
     console.error('Database query failed in saveUserOrder:', error);
     throw new Error('Database query failed. Please try again later.', { cause: error });
+  }
+}
+
+export async function updateUserOrderStateSql(
+  orderCode: string,
+  updates: Partial<{
+    status: string;
+    trackingStage: string;
+    cancelledAt: string | null;
+    cancellationReason: string | null;
+    returnInfoJson: UserOrder['returnInfo'] | null;
+  }>
+): Promise<void> {
+  try {
+    await sqlDb
+      .update(orders)
+      .set(updates)
+      .where(eq(orders.orderCode, orderCode));
+  } catch (error) {
+    console.error('Database query failed in updateUserOrderStateSql:', error);
   }
 }
 

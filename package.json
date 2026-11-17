@@ -10,11 +10,11 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/utils/formatters.test.ts src/utils/commerceFeatures.test.ts src/utils/spendingTrends.test.ts src/utils/imageLoader.test.ts src/utils/pdfInvoiceExporter.test.ts src/utils/courierLiveMap.test.ts src/db/config.test.ts src/server/orchestrator.test.ts"
+    "test": "tsx --test src/utils/formatters.test.ts src/utils/commerceFeatures.test.ts src/utils/spendingTrends.test.ts src/utils/imageLoader.test.ts src/utils/pdfInvoiceExporter.test.ts src/utils/courierLiveMap.test.ts src/utils/voiceCheckoutCommands.test.ts src/db/config.test.ts src/server/orchestrator.test.ts src/server/marketplace.test.ts"
   },
   "dependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",
-    "@google/genai": "^2.4.0",
+    "@google/genai": "^3.4.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/cors": "^2.8.19",
     "@types/d3": "^7.4.3",

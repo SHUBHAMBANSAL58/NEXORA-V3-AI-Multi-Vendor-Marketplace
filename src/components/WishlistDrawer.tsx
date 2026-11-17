@@ -9,6 +9,7 @@ interface WishlistDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   wishlistedIds: Set<string>;
+  products?: CatalogProduct[];
   onRemoveWishlist: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onMoveAllToCart: (products: CatalogProduct[]) => void;
@@ -20,6 +21,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
   isOpen,
   onClose,
   wishlistedIds,
+  products,
   onRemoveWishlist,
   onAddToCart,
   onMoveAllToCart,
@@ -28,8 +30,9 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const catalogSource = products && products.length > 0 ? products : PRODUCTS_CATALOG;
   // Resolve wishlisted products from catalog
-  const wishlistedProducts = PRODUCTS_CATALOG.filter((p) => wishlistedIds.has(p.id));
+  const wishlistedProducts = catalogSource.filter((p) => wishlistedIds.has(p.id));
 
   const totalValuePaise = wishlistedProducts.reduce((sum, item) => sum + item.pricePaise, 0);
 
@@ -80,7 +83,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                 }}
                 className="mt-3 inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold hover:bg-cyan-600 dark:hover:bg-cyan-400 transition-colors cursor-pointer"
               >
-                <span>Browse 60 Products</span>
+                <span>Browse {catalogSource.length} Products</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

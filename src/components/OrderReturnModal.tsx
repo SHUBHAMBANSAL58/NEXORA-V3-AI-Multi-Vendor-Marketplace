@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { X, RotateCcw, Check, Calendar, AlertCircle, ShieldCheck } from 'lucide-react';
-import { UserOrder, OrderReturnInfo } from '../types/index.js';
+import { UserOrder, UserProfile, OrderReturnInfo } from '../types/index.js';
 import { formatCurrencyINR } from '../utils/formatters.js';
 
 interface OrderReturnModalProps {
   isOpen: boolean;
   onClose: () => void;
   order: UserOrder | null;
+  user?: UserProfile;
   onSubmitReturn: (orderId: string, returnInfo: OrderReturnInfo) => void;
 }
 
@@ -22,6 +23,7 @@ export const OrderReturnModal: React.FC<OrderReturnModalProps> = ({
   isOpen,
   onClose,
   order,
+  user,
   onSubmitReturn,
 }) => {
   const [reason, setReason] = useState(RETURN_REASONS[0]);
@@ -31,6 +33,14 @@ export const OrderReturnModal: React.FC<OrderReturnModalProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
 
   if (!isOpen || !order) return null;
+
+  const pickupAddr =
+    order.deliveryAddress ||
+    user?.addresses.find((a) => a.isDefault) ||
+    user?.addresses[0];
+  const pickupLocationLabel = pickupAddr
+    ? `${pickupAddr.pinCode}, ${pickupAddr.street}, ${pickupAddr.city}`
+    : '110001, Connaught Place, New Delhi';
 
   // Compute pickup date 2 days from now
   const pickupDate = new Date();
@@ -186,7 +196,7 @@ export const OrderReturnModal: React.FC<OrderReturnModalProps> = ({
               <span>Doorstep Reverse Pickup Scheduled: {pickupDateFormatted}</span>
             </div>
             <p>
-              BlueDart / Delhivery courier agent will inspect original packaging and box contents at your registered delivery address (110001, Connaught Place, New Delhi).
+              BlueDart / Delhivery courier agent will inspect original packaging and box contents at your registered delivery address ({pickupLocationLabel}).
             </p>
           </div>
 

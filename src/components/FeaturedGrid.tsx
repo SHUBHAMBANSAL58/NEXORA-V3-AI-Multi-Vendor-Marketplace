@@ -11,13 +11,15 @@ import {
   Check,
   Heart,
 } from 'lucide-react';
-import { CatalogProduct } from '../types/index.js';
+import { CatalogProduct, CatalogProductWithMeta, CategoryItem } from '../types/index.js';
 import { PRODUCTS_CATALOG, EXPANDED_CATEGORIES } from '../data/productsCatalog.js';
 import { calculateCategoryProductCounts } from '../utils/commerceFeatures.js';
 import { ProductCard } from './ProductCard.js';
 import { RecentlyViewed } from './RecentlyViewed.js';
 
 interface FeaturedGridProps {
+  products?: CatalogProductWithMeta[];
+  categories?: CategoryItem[];
   selectedCategory: string;
   onSelectCategory: (slug: string) => void;
   searchFilter: string;
@@ -38,6 +40,8 @@ interface FeaturedGridProps {
 const ITEMS_PER_PAGE = 12;
 
 export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
+  products,
+  categories,
   selectedCategory,
   onSelectCategory,
   searchFilter,
@@ -63,18 +67,29 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
   const [localSearch, setLocalSearch] = useState<string>('');
   const [showWishlistOnly, setShowWishlistOnly] = useState<boolean>(false);
 
+  const activeCatalog = useMemo(() => {
+    const source: CatalogProductWithMeta[] =
+      products && products.length > 0 ? products : PRODUCTS_CATALOG;
+    return source.filter((p) => p.isPublished !== false);
+  }, [products]);
+
+  const activeCategories = useMemo(
+    () => (categories && categories.length > 0 ? categories : EXPANDED_CATEGORIES),
+    [categories]
+  );
+
   // Extract unique brands from catalogue
   const allBrands = useMemo(() => {
     const brands = new Set<string>();
-    PRODUCTS_CATALOG.forEach((p) => {
+    activeCatalog.forEach((p) => {
       if (p.brand) brands.add(p.brand);
     });
     return Array.from(brands).sort();
-  }, []);
+  }, [activeCatalog]);
 
   const categoryCounts = useMemo(
-    () => calculateCategoryProductCounts(PRODUCTS_CATALOG),
-    []
+    () => calculateCategoryProductCounts(activeCatalog),
+    [activeCatalog]
   );
 
   // Combined search term (from Navbar searchFilter prop OR local input)
@@ -82,7 +97,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
 
   // Filtered & Sorted Products computation
   const filteredProducts = useMemo(() => {
-    let list = [...PRODUCTS_CATALOG];
+    let list = [...activeCatalog];
 
     // 0. Wishlist Only Filter
     if (showWishlistOnly) {
@@ -156,7 +171,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
     }
 
     return list;
-  }, [selectedCategory, activeSearch, selectedBrand, priceRange, minRating, sortBy, showWishlistOnly, wishlistedIds, quickFilter]);
+  }, [activeCatalog, selectedCategory, activeSearch, selectedBrand, priceRange, minRating, sortBy, showWishlistOnly, wishlistedIds, quickFilter]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1;
@@ -190,7 +205,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Curated Catalog · {PRODUCTS_CATALOG.length} Masterworks</span>
+            <span>Curated Catalog · {activeCatalog.length} Masterworks</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Discover Exceptional Engineering
@@ -221,7 +236,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
       {/* 2. CATEGORY TABS (Zero-Pill Discipline: Segmented Controls) */}
       <div className="mb-6 overflow-x-auto no-scrollbar">
         <div className="inline-flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800">
-          {EXPANDED_CATEGORIES.map((cat) => {
+          {activeCategories.map((cat) => {
             const isSelected = !showWishlistOnly && selectedCategory === cat.slug;
             return (
               <button
@@ -471,7 +486,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {PRODUCTS_CATALOG.filter((p) => p.rating >= 4.85)
+                {activeCatalog.filter((p) => p.rating >= 4.85)
                   .slice(0, 4)
                   .map((product) => (
                     <ProductCard

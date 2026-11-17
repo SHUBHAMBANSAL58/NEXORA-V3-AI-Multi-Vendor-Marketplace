@@ -1,6 +1,6 @@
 {
   "name": "NEXORA V3 — AI Multi-Vendor Marketplace",
   "description": "Premier multi-vendor e-commerce marketplace featuring NOVA AI shopping assistant, real customer, seller, and admin portals, and secure commerce architecture.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

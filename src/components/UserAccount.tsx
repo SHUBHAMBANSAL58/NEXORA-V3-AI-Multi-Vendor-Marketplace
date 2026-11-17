@@ -42,6 +42,8 @@ import {
   formatOrderSummaryShareText,
   calculateUserAchievementBadges,
   calculatePurchaseHistorySummary,
+  canCancelOrder,
+  validateIndianPinCode,
 } from '../utils/commerceFeatures.js';
 import { exportOrderHistoryToPdf } from '../utils/pdfInvoiceExporter.js';
 import { OrderTrackerModal } from './OrderTrackerModal.js';
@@ -51,6 +53,7 @@ import { TrackOrderProgressBar } from './TrackOrderProgressBar.js';
 import { AchievementBadges } from './AchievementBadges.js';
 import { OrderMilestoneGauge } from './OrderMilestoneGauge.js';
 import { CourierLiveMap } from './CourierLiveMap.js';
+import { isBlueDartExpressOrder } from '../utils/courierLiveMap.js';
 import { SafeImage } from './SafeImage.js';
 import { useAuth } from '../contexts/AuthContext.js';
 
@@ -59,8 +62,11 @@ interface UserAccountProps {
   onClose: () => void;
   currentUser: UserProfile;
   onUpdateUser: (user: UserProfile) => void;
+  onCancelOrder?: (orderId: string, reason?: string) => void;
   onOpenWishlist?: () => void;
   onOpenCommandCenter?: () => void;
+  onOpenSellerPortal?: () => void;
+  onOpenAdminPortal?: () => void;
   initialTab?: 'profile' | 'addresses' | 'orders' | 'login' | 'register';
 }
 
@@ -354,8 +360,11 @@ export const UserAccount: React.FC<UserAccountProps> = ({
   onClose,
   currentUser,
   onUpdateUser,
+  onCancelOrder,
   onOpenWishlist,
   onOpenCommandCenter,
+  onOpenSellerPortal,
+  onOpenAdminPortal,
   initialTab = 'profile',
 }) => {
   const { firebaseUser, isSigningIn, authError, signInWithGoogle, signOutUser } = useAuth();
@@ -393,6 +402,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
   const [newAddrState, setNewAddrState] = useState('Delhi');
   const [newAddrPin, setNewAddrPin] = useState('');
   const [newAddrDefault, setNewAddrDefault] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
 
   // Active Modals for Order Actions
   const [trackingOrder, setTrackingOrder] = useState<UserOrder | null>(null);
@@ -404,6 +414,8 @@ export const UserAccount: React.FC<UserAccountProps> = ({
   const [copiedNotesId, setCopiedNotesId] = useState<string | null>(null);
   const [orderFilterTab, setOrderFilterTab] = useState<'all' | 'notes'>('all');
   const [shareSuccessToast, setShareSuccessToast] = useState<string | null>(null);
+  const [focusedMapOrderId, setFocusedMapOrderId] = useState<string | undefined>(undefined);
+  const miniMapWrapperRef = React.useRef<HTMLDivElement>(null);
 
   // Dynamic Achievement Badges Memoization
   const userBadges = React.useMemo(() => {
@@ -604,16 +616,32 @@ export const UserAccount: React.FC<UserAccountProps> = ({
 
   const handleAddAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAddrStreet || !newAddrCity || !newAddrPin) return;
+    setAddressError(null);
+    if (!newAddrStreet.trim() || !newAddrCity.trim() || !newAddrPin.trim()) {
+      setAddressError('Please fill in street, city, and a valid 6-digit Indian PIN code.');
+      return;
+    }
+
+    const pinCheck = validateIndianPinCode(newAddrPin);
+    if (!pinCheck.valid) {
+      setAddressError(pinCheck.error || 'Enter a valid 6-digit Indian PIN code.');
+      return;
+    }
+
+    const phoneDigits = (newAddrPhone || currentUser.phone || '').replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      setAddressError('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
 
     const newAddress: UserAddress = {
       id: `addr-${Date.now()}`,
-      name: newAddrName || currentUser.name,
-      phone: newAddrPhone || currentUser.phone || '+91 98765 43210',
-      street: newAddrStreet,
-      city: newAddrCity,
-      state: newAddrState,
-      pinCode: newAddrPin,
+      name: newAddrName.trim() || currentUser.name,
+      phone: newAddrPhone.trim() || currentUser.phone || '+91 98765 43210',
+      street: newAddrStreet.trim(),
+      city: newAddrCity.trim(),
+      state: newAddrState.trim() || 'Delhi',
+      pinCode: newAddrPin.trim(),
       isDefault: newAddrDefault || currentUser.addresses.length === 0,
     };
 
@@ -629,6 +657,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
     });
 
     setShowAddAddress(false);
+    setAddressError(null);
     setNewAddrName('');
     setNewAddrPhone('');
     setNewAddrStreet('');
@@ -964,7 +993,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 const points = currentUser.loyaltyPoints ?? calculateLoyaltyPoints(lifetimeSpentPaise);
                 const tier = currentUser.tier ?? getLoyaltyTier(points);
                 const redeemValueINR = (points * 0.1).toFixed(2);
-                const progressToNext = tier === 'Silver' ? Math.min(100, (points / 250) * 100) : tier === 'Gold' ? Math.min(100, ((points - 250) / 750) * 100) : 100;
+                const progressToNext =
+                  tier === 'Silver'
+                    ? Math.min(100, (points / 500) * 100)
+                    : tier === 'Gold'
+                    ? Math.min(100, ((points - 500) / 1000) * 100)
+                    : 100;
 
                 return (
                   <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-[#0e1726] border border-cyan-500/30 text-white shadow-xl relative overflow-hidden">
@@ -1004,7 +1038,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     <div className="relative z-10 pt-4 space-y-2 text-xs">
                       <div className="flex justify-between text-[11px] text-slate-400">
                         <span>Current Tier: <strong className="text-white">{tier}</strong></span>
-                        <span>{tier === 'Platinum' ? 'Highest Tier Unlocked' : `${tier === 'Silver' ? 250 - points : 1000 - points} pts to next tier`}</span>
+                        <span>{tier === 'Platinum' ? 'Highest Tier Unlocked' : `${Math.max(0, (tier === 'Silver' ? 500 : 1500) - points)} pts to next tier`}</span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
                         <div
@@ -1014,8 +1048,8 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       </div>
                       <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-0.5">
                         <span className={tier === 'Silver' ? 'text-cyan-400 font-bold' : ''}>Silver (0+)</span>
-                        <span className={tier === 'Gold' ? 'text-amber-400 font-bold' : ''}>Gold (250+)</span>
-                        <span className={tier === 'Platinum' ? 'text-purple-400 font-bold' : ''}>Platinum (1,000+)</span>
+                        <span className={tier === 'Gold' ? 'text-amber-400 font-bold' : ''}>Gold (500+)</span>
+                        <span className={tier === 'Platinum' ? 'text-purple-400 font-bold' : ''}>Platinum (1,500+)</span>
                       </div>
                     </div>
 
@@ -1040,15 +1074,15 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 );
               })()}
 
-              {/* Role Fast-Switcher for Demonstrations */}
+              {/* Stakeholder Preview Mode (Sandbox) */}
               <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
-                      One-Click Role Demonstration
+                      Stakeholder Preview Mode (Sandbox)
                     </h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Switch between verified stakeholder roles to test customized platform capabilities.
+                      Preview Customer, Seller, or Admin workspaces locally; privileged API writes still verify Firebase RBAC claims.
                     </p>
                   </div>
                 </div>
@@ -1104,7 +1138,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => {
@@ -1116,7 +1150,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                   <span>Reset / Re-authenticate</span>
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {onOpenWishlist && (
                     <button
                       type="button"
@@ -1127,6 +1161,32 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 cursor-pointer"
                     >
                       Saved Wishlist ({currentUser.wishlistCount})
+                    </button>
+                  )}
+                  {(currentUser.role === 'seller' || currentUser.role === 'admin') && onOpenSellerPortal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenSellerPortal();
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/60 rounded-lg hover:bg-cyan-100 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Store className="w-3.5 h-3.5" />
+                      <span>Open Seller Central</span>
+                    </button>
+                  )}
+                  {currentUser.role === 'admin' && onOpenAdminPortal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenAdminPortal();
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 rounded-lg hover:bg-purple-100 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Open Admin Governance</span>
                     </button>
                   )}
                   {currentUser.role === 'admin' && onOpenCommandCenter && (
@@ -1275,10 +1335,18 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       Make this my default delivery address
                     </label>
                   </div>
+                  {addressError && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                      {addressError}
+                    </p>
+                  )}
                   <div className="flex justify-end gap-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => setShowAddAddress(false)}
+                      onClick={() => {
+                        setShowAddAddress(false);
+                        setAddressError(null);
+                      }}
                       className="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
                     >
                       Cancel
@@ -1454,13 +1522,18 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 );
               })()}
 
-              {/* Interactive Leaflet Live Courier Map for Active BlueDart Express Shipments */}
-              {currentUser.orders.length > 0 && orderFilterTab === 'all' && (
-                <CourierLiveMap
-                  orders={currentUser.orders}
-                  addresses={currentUser.addresses}
-                  onOpenOrderTracker={(targetOrder) => setTrackingOrder(targetOrder)}
-                />
+              {/* Mini Interactive Leaflet Map for BlueDart Express Package Tracking Status */}
+              {currentUser.orders.some(isBlueDartExpressOrder) && orderFilterTab === 'all' && (
+                <div ref={miniMapWrapperRef}>
+                  <CourierLiveMap
+                    orders={currentUser.orders}
+                    addresses={currentUser.addresses}
+                    courierScope="bluedart"
+                    focusedOrderId={focusedMapOrderId}
+                    onSelectOrderId={(id) => setFocusedMapOrderId(id)}
+                    onOpenOrderTracker={(targetOrder) => setTrackingOrder(targetOrder)}
+                  />
+                </div>
               )}
 
               {/* D3 Circular Order Milestone Gauge for Latest Order */}
@@ -1753,6 +1826,29 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                   )}
                                 </button>
 
+                                {/* Focus BlueDart Express Route on Mini Interactive Leaflet Map */}
+                                {isBlueDartExpressOrder(order) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFocusedMapOrderId(order.id);
+                                      miniMapWrapperRef.current?.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'start',
+                                      });
+                                    }}
+                                    className={`font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+                                      focusedMapOrderId === order.id
+                                        ? 'text-cyan-600 dark:text-cyan-400 underline'
+                                        : 'text-slate-700 dark:text-slate-300 hover:text-cyan-500'
+                                    }`}
+                                    aria-label={`View BlueDart Express route map for order ${order.id}`}
+                                  >
+                                    <MapPin className="w-3.5 h-3.5 text-cyan-500" />
+                                    <span>{focusedMapOrderId === order.id ? 'On Live Map' : 'Route Map'}</span>
+                                  </button>
+                                )}
+
                                 {/* Track Dispatch */}
                                 <button
                                   type="button"
@@ -1772,6 +1868,36 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                   <FileText className="w-3.5 h-3.5" />
                                   <span>GST Invoice</span>
                                 </button>
+
+                                {/* Cancel Pre-Dispatch Order */}
+                                {canCancelOrder(order) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (onCancelOrder) {
+                                        onCancelOrder(order.id, 'Cancelled by customer');
+                                      } else {
+                                        const updatedOrders = currentUser.orders.map((o) =>
+                                          o.id === order.id
+                                            ? {
+                                                ...o,
+                                                status: 'Cancelled' as const,
+                                                cancelledAt: new Date().toISOString(),
+                                                cancellationReason: 'Cancelled by customer',
+                                              }
+                                            : o
+                                        );
+                                        onUpdateUser({ ...currentUser, orders: updatedOrders });
+                                      }
+                                      setShareSuccessToast(`Order ${order.id} cancelled.`);
+                                      setTimeout(() => setShareSuccessToast(null), 2500);
+                                    }}
+                                    className="font-semibold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                    <span>Cancel Order</span>
+                                  </button>
+                                )}
 
                                 {/* Request Return Flow (Delivered orders) */}
                                 {isDelivered && !isReturnRequested && (
@@ -2110,11 +2236,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({
         </div>
       </div>
 
-      {/* Sub-Modals for Real-Time Dispatch Tracking, Returns, and GST Invoices */}
+      {/* Sub-Modals for Dispatch Tracking, Returns, and GST Invoices */}
       <OrderTrackerModal
         isOpen={!!trackingOrder}
         onClose={() => setTrackingOrder(null)}
         order={trackingOrder}
+        user={currentUser}
         onAdvanceStage={handleAdvanceStage}
       />
 
@@ -2122,6 +2249,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
         isOpen={!!returnOrder}
         onClose={() => setReturnOrder(null)}
         order={returnOrder}
+        user={currentUser}
         onSubmitReturn={handleReturnSubmit}
       />
 

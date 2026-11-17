@@ -76,6 +76,7 @@ export const NovaModal: React.FC<NovaModalProps> = ({
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [inferenceMode, setInferenceMode] = useState<'gemini-live' | 'offline-catalog-fallback'>('gemini-live');
   const [isListening, setIsListening] = useState(false);
   const [voiceStatusNote, setVoiceStatusNote] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -95,6 +96,15 @@ export const NovaModal: React.FC<NovaModalProps> = ({
       setIsListening(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -140,6 +150,9 @@ export const NovaModal: React.FC<NovaModalProps> = ({
       }
 
       const data = payload.data || {};
+      if (data.mode === 'offline-catalog-fallback' || data.mode === 'gemini-live') {
+        setInferenceMode(data.mode);
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -252,7 +265,7 @@ export const NovaModal: React.FC<NovaModalProps> = ({
               <h3 className="font-bold text-sm flex items-center gap-1.5">
                 <span>NOVA AI Shopping Assistant</span>
                 <span className="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-950/80 px-1.5 py-0.5 rounded font-semibold">
-                  Gemini Grounded
+                  {inferenceMode === 'offline-catalog-fallback' ? 'Catalog Fallback' : 'Gemini Live'}
                 </span>
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">

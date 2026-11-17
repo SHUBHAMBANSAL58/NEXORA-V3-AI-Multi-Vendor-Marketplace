@@ -6,12 +6,16 @@ interface FooterProps {
   onNotifyToast?: (message: string) => void;
   onSelectCategory?: (categorySlug: string) => void;
   onOpenUserAccount?: (tab?: 'profile' | 'addresses' | 'orders' | 'login') => void;
+  onOpenSellerPortal?: () => void;
+  onOpenAdminPortal?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onNotifyToast,
   onSelectCategory,
   onOpenUserAccount,
+  onOpenSellerPortal,
+  onOpenAdminPortal,
 }) => {
   return (
     <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#060911] text-slate-600 dark:text-slate-400 text-xs">
@@ -107,8 +111,11 @@ export const Footer: React.FC<FooterProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    onOpenUserAccount?.('profile');
-                    onNotifyToast?.('Use One-Click Role Switcher to preview Seller Central.');
+                    if (onOpenSellerPortal) {
+                      onOpenSellerPortal();
+                    } else {
+                      onOpenUserAccount?.('profile');
+                    }
                   }}
                   className="hover:text-cyan-500 transition-colors cursor-pointer text-left"
                 >
@@ -118,10 +125,31 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onOpenUserAccount?.('profile')}
+                  onClick={() => {
+                    if (onOpenSellerPortal) {
+                      onOpenSellerPortal();
+                    } else {
+                      onOpenUserAccount?.('profile');
+                    }
+                  }}
                   className="hover:text-cyan-500 transition-colors cursor-pointer text-left"
                 >
                   Seller Dashboard
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenAdminPortal) {
+                      onOpenAdminPortal();
+                    } else {
+                      onOpenUserAccount?.('profile');
+                    }
+                  }}
+                  className="hover:text-cyan-500 transition-colors cursor-pointer text-left"
+                >
+                  Admin Governance
                 </button>
               </li>
               <li>

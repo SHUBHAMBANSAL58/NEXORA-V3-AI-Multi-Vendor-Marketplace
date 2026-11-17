@@ -15,12 +15,16 @@ import {
 import { UserAddress, UserOrder } from '../types/index.js';
 import {
   buildCourierRouteTelemetry,
-  getActiveCourierOrders,
+  getBlueDartTrackableOrders,
+  getTrackableOrdersForMiniMap,
 } from '../utils/courierLiveMap.js';
 
 interface CourierLiveMapProps {
   orders: UserOrder[];
   addresses: UserAddress[];
+  courierScope?: 'all' | 'bluedart';
+  focusedOrderId?: string;
+  onSelectOrderId?: (orderId: string) => void;
   onOpenOrderTracker?: (order: UserOrder) => void;
 }
 
@@ -122,15 +126,34 @@ function createCityCorridorGridLayer(isDark: boolean): L.GridLayer {
   });
 }
 
+const TRACKING_STAGES = ['Processing', 'Dispatched', 'Out for Delivery', 'Delivered'] as const;
+
 export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
   orders,
   addresses,
+  courierScope = 'bluedart',
+  focusedOrderId,
+  onSelectOrderId,
   onOpenOrderTracker,
 }) => {
-  const activeOrders = useMemo(() => getActiveCourierOrders(orders), [orders]);
-  const [selectedOrderId, setSelectedOrderId] = useState<string>(
-    activeOrders[0]?.id || ''
+  const trackableOrders = useMemo(
+    () =>
+      courierScope === 'bluedart'
+        ? getBlueDartTrackableOrders(orders)
+        : getTrackableOrdersForMiniMap(orders),
+    [orders, courierScope]
   );
+  const [internalOrderId, setInternalOrderId] = useState<string>(
+    trackableOrders[0]?.id || ''
+  );
+  const selectedOrderId =
+    focusedOrderId && trackableOrders.some((o) => o.id === focusedOrderId)
+      ? focusedOrderId
+      : internalOrderId;
+  const setSelectedOrderId = (nextId: string) => {
+    setInternalOrderId(nextId);
+    onSelectOrderId?.(nextId);
+  };
   const [isLiveAnimating, setIsLiveAnimating] = useState<boolean>(true);
   const [liveTick, setLiveTick] = useState<number>(0.42);
   const [isDarkTheme, setIsDarkTheme] = useState<boolean>(() =>
@@ -149,10 +172,14 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
 
   // Sync active order selection if order list changes
   useEffect(() => {
-    if (activeOrders.length > 0 && !activeOrders.some((o) => o.id === selectedOrderId)) {
-      setSelectedOrderId(activeOrders[0].id);
+    if (trackableOrders.length > 0 && !trackableOrders.some((o) => o.id === selectedOrderId)) {
+      const nextId = trackableOrders[0].id;
+      setInternalOrderId(nextId);
+      if (focusedOrderId && focusedOrderId !== nextId) {
+        onSelectOrderId?.(nextId);
+      }
     }
-  }, [activeOrders, selectedOrderId]);
+  }, [trackableOrders, selectedOrderId, focusedOrderId, onSelectOrderId]);
 
   // Observe light/dark root class switches
   useEffect(() => {
@@ -164,17 +191,20 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  // Advance live courier position smoothly when active
+  const selectedOrder =
+    trackableOrders.find((o) => o.id === selectedOrderId) || trackableOrders[0] || null;
+
+  const isSelectedDelivered =
+    selectedOrder?.status === 'Delivered' || selectedOrder?.trackingStage === 'Delivered';
+
+  // Advance live courier position smoothly when selected shipment is in transit
   useEffect(() => {
-    if (!isLiveAnimating || activeOrders.length === 0) return;
+    if (!isLiveAnimating || trackableOrders.length === 0 || isSelectedDelivered) return;
     const timer = window.setInterval(() => {
       setLiveTick((prev) => (prev >= 0.96 ? 0.15 : Number((prev + 0.08).toFixed(2))));
     }, 1500);
     return () => window.clearInterval(timer);
-  }, [isLiveAnimating, activeOrders.length]);
-
-  const selectedOrder =
-    activeOrders.find((o) => o.id === selectedOrderId) || activeOrders[0] || null;
+  }, [isLiveAnimating, trackableOrders.length, isSelectedDelivered]);
 
   const telemetry = useMemo(() => {
     if (!selectedOrder) return null;
@@ -202,10 +232,13 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
       zoomControl: true,
       scrollWheelZoom: false,
       attributionControl: true,
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
     });
     mapInstanceRef.current = map;
 
-    map.fitBounds(initialBounds, { padding: [48, 56], maxZoom: 13 });
+    map.fitBounds(initialBounds, { padding: [48, 56], maxZoom: 13, animate: false });
 
     const baseLayer = createCityCorridorGridLayer(isDarkTheme);
     baseLayer.addTo(map);
@@ -248,29 +281,42 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
       }
     });
 
+    const courierLabel =
+      telemetry.stage === 'Delivered'
+        ? `${selectedOrder.courierPartner || 'Courier'} · Delivered`
+        : (selectedOrder.courierPartner || 'BlueDart Express').toLowerCase().includes('bluedart')
+        ? 'BlueDart Express'
+        : selectedOrder.courierPartner || 'Express Courier';
+
     const courierMarker = L.marker(
       [telemetry.currentPosition.lat, telemetry.currentPosition.lng],
       {
-        icon: createCourierDivIcon('BlueDart Express'),
+        icon: createCourierDivIcon(courierLabel),
         zIndexOffset: 1000,
       }
     )
       .bindPopup(
-        `<div style="font-size:12px;"><strong>BlueDart Express</strong><br/>AWB: ${telemetry.trackingNumber}<br/>Stage: ${telemetry.stage} · ${telemetry.speedKmh} km/h</div>`
+        `<div style="font-size:12px;"><strong>${courierLabel}</strong><br/>AWB: ${telemetry.trackingNumber}<br/>Stage: ${telemetry.stage} · ${telemetry.speedKmh} km/h</div>`
       )
       .addTo(map);
     courierMarkerRef.current = courierMarker;
 
     const rafId = window.requestAnimationFrame(() => {
       if (mapInstanceRef.current === map) {
-        map.invalidateSize();
-        map.fitBounds(initialBounds, { padding: [48, 56], maxZoom: 13 });
+        map.invalidateSize({ animate: false });
+        map.fitBounds(initialBounds, { padding: [48, 56], maxZoom: 13, animate: false });
       }
     });
 
     return () => {
       window.cancelAnimationFrame(rafId);
-      map.remove();
+      try {
+        map.stop();
+        map.off();
+        map.remove();
+      } catch {
+        // Ignore teardown edge cases when DOM detaches abruptly
+      }
       mapInstanceRef.current = null;
       gridLayerRef.current = null;
       completedLineRef.current = null;
@@ -303,7 +349,7 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
       telemetry.currentPosition.lng,
     ]);
     courierMarkerRef.current?.setPopupContent(
-      `<div style="font-size:12px;"><strong>BlueDart Express</strong><br/>AWB: ${telemetry.trackingNumber}<br/>Stage: ${telemetry.stage} · ${telemetry.speedKmh} km/h · ETA ${telemetry.etaLabel}</div>`
+      `<div style="font-size:12px;"><strong>${telemetry.courierDisplayName}</strong><br/>AWB: ${telemetry.trackingNumber}<br/>Stage: ${telemetry.stage} · ${telemetry.speedKmh} km/h · ETA ${telemetry.etaLabel}</div>`
     );
   }, [telemetry]);
 
@@ -313,31 +359,41 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
     const bounds = L.latLngBounds(
       telemetry.waypoints.map((w) => [w.lat, w.lng] as [number, number])
     );
-    map.fitBounds(bounds, { padding: [48, 56], maxZoom: 13 });
+    map.fitBounds(bounds, { padding: [48, 56], maxZoom: 13, animate: false });
   };
 
-  if (activeOrders.length === 0 || !telemetry || !selectedOrder) {
+  if (trackableOrders.length === 0 || !telemetry || !selectedOrder) {
     return (
       <div
         data-testid="courier-live-map-empty"
-        className="p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 flex items-center justify-between gap-3 text-xs"
+        className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 flex items-center justify-between gap-3 text-xs"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+            <Truck className="w-5 h-5" />
           </div>
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white">
-              BlueDart Express Live Map
+              Real-Time Package Tracking Map
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              All active shipments have been delivered. Place a new order to track live courier GPS telemetry.
+              Place an order to visualize real-time courier dispatch routes and doorstep ETA.
             </p>
           </div>
         </div>
       </div>
     );
   }
+
+  const stageIdx = Math.max(
+    0,
+    TRACKING_STAGES.indexOf(
+      TRACKING_STAGES.includes(telemetry.stage as (typeof TRACKING_STAGES)[number])
+        ? (telemetry.stage as (typeof TRACKING_STAGES)[number])
+        : 'Processing'
+    )
+  );
+  const progressPct = Math.round(telemetry.progressRatio * 100);
 
   return (
     <div
@@ -353,12 +409,19 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                BlueDart Express Live GPS Tracker
+                BlueDart Express · Mini Live Route Map
               </h4>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                <Radio className="w-3 h-3 animate-pulse" />
-                <span>LIVE</span>
-              </span>
+              {isSelectedDelivered ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>DELIVERED</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                  <Radio className="w-3 h-3" />
+                  <span>SIMULATED GPS</span>
+                </span>
+              )}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {telemetry.courierDisplayName} · AWB:{' '}
@@ -370,39 +433,41 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          {activeOrders.length > 1 && (
+          {trackableOrders.length > 1 && (
             <select
-              aria-label="Select active order for live map"
+              aria-label="Select package for mini tracking map"
               value={selectedOrder.id}
               onChange={(e) => setSelectedOrderId(e.target.value)}
-              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-mono font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-mono font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 max-w-[240px]"
             >
-              {activeOrders.map((ord) => (
+              {trackableOrders.map((ord) => (
                 <option key={ord.id} value={ord.id}>
-                  {ord.id} ({ord.trackingStage || ord.status})
+                  {ord.id} · {ord.trackingStage || ord.status}
                 </option>
               ))}
             </select>
           )}
 
-          <button
-            type="button"
-            onClick={() => setIsLiveAnimating((prev) => !prev)}
-            className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-cyan-500 text-[11px] font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors"
-            aria-label={isLiveAnimating ? 'Pause live courier GPS' : 'Resume live courier GPS'}
-          >
-            {isLiveAnimating ? (
-              <>
-                <Pause className="w-3 h-3 text-amber-500" />
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-3 h-3 text-emerald-500" />
-                <span>Resume</span>
-              </>
-            )}
-          </button>
+          {!isSelectedDelivered && (
+            <button
+              type="button"
+              onClick={() => setIsLiveAnimating((prev) => !prev)}
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-cyan-500 text-[11px] font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors"
+              aria-label={isLiveAnimating ? 'Pause live courier GPS' : 'Resume live courier GPS'}
+            >
+              {isLiveAnimating ? (
+                <>
+                  <Pause className="w-3 h-3 text-amber-500" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3 h-3 text-emerald-500" />
+                  <span>Resume</span>
+                </>
+              )}
+            </button>
+          )}
 
           <button
             type="button"
@@ -414,6 +479,47 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
             <span>Recenter</span>
           </button>
         </div>
+      </div>
+
+      {/* Synchronized Package Tracking Status Strip */}
+      <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0d1628] flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {TRACKING_STAGES.map((stageName, idx) => {
+            const reached = idx <= stageIdx;
+            const current = idx === stageIdx;
+            return (
+              <span
+                key={stageName}
+                className={`inline-flex items-center gap-1 font-medium ${
+                  current
+                    ? 'text-cyan-600 dark:text-cyan-400 font-bold'
+                    : reached
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    current
+                      ? 'bg-cyan-500'
+                      : reached
+                      ? 'bg-emerald-500'
+                      : 'bg-slate-300 dark:bg-slate-700'
+                  }`}
+                />
+                <span>{stageName}</span>
+                {idx < TRACKING_STAGES.length - 1 && (
+                  <span className="text-slate-300 dark:text-slate-700 pl-1" aria-hidden="true">
+                    →
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+        <span className="font-mono font-bold text-[10px] text-slate-600 dark:text-slate-300">
+          {progressPct}% Route Complete
+        </span>
       </div>
 
       {/* Interactive Leaflet Map Surface (isolated z-index so overlays never bleed) */}

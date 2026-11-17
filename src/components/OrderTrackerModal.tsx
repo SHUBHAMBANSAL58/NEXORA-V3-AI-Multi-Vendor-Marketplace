@@ -11,7 +11,7 @@ import {
   RefreshCw,
   ExternalLink,
 } from 'lucide-react';
-import { UserOrder, OrderStage } from '../types/index.js';
+import { UserOrder, UserProfile, OrderStage } from '../types/index.js';
 import { formatCurrencyINR } from '../utils/formatters.js';
 import { generateTrackingTimeline } from '../utils/commerceFeatures.js';
 
@@ -19,6 +19,7 @@ interface OrderTrackerModalProps {
   isOpen: boolean;
   onClose: () => void;
   order: UserOrder | null;
+  user?: UserProfile;
   onAdvanceStage: (orderId: string) => void;
 }
 
@@ -28,6 +29,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   isOpen,
   onClose,
   order,
+  user,
   onAdvanceStage,
 }) => {
   useEffect(() => {
@@ -45,11 +47,19 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   const stageIndex = STAGES.indexOf(currentStage);
   const isFinalDelivered = currentStage === 'Delivered';
 
+  const deliveryAddr =
+    order.deliveryAddress ||
+    user?.addresses.find((a) => a.isDefault) ||
+    user?.addresses[0];
+  const destinationLabel = deliveryAddr
+    ? `${deliveryAddr.city}, ${deliveryAddr.state} (${deliveryAddr.pinCode})`
+    : 'New Delhi, India (110001)';
+
   // Get or generate checkpoints
   const checkpoints =
     order.checkpoints && order.checkpoints.length > 0
       ? order.checkpoints
-      : generateTrackingTimeline(currentStage, order.date);
+      : generateTrackingTimeline(currentStage, order.date, destinationLabel);
 
   return (
     <div
@@ -163,7 +173,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
           <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 flex items-center justify-between text-xs">
             <div>
               <p className="font-semibold text-slate-900 dark:text-white">
-                Destination: New Delhi, India (110001)
+                Destination: {destinationLabel}
               </p>
               <p className="text-slate-500 text-[11px] mt-0.5">
                 Estimated Delivery:{' '}
@@ -226,7 +236,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
         <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-            <span>Encrypted telemetry sync via NEXORA Express Gateway</span>
+            <span>Simulated logistics telemetry · NEXORA Express Gateway</span>
           </div>
 
           {!isFinalDelivered ? (

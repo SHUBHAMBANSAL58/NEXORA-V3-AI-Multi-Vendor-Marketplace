@@ -202,7 +202,7 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="lg:col-span-5 relative">
             <div className="relative">
               {/* Background ambient ring behind card */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 to-blue-600/30 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse pointer-events-none" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/25 to-blue-600/25 rounded-3xl blur-xl opacity-75 pointer-events-none" />
               
               {/* Featured Product Display Component */}
               <FeaturedProductCard

@@ -63,9 +63,11 @@ export function buildPdfOrderHistoryDocumentData(
 ): PdfOrderHistoryDocumentData {
   const defaultAddr =
     user.addresses.find((a) => a.isDefault) || user.addresses[0];
+  const orderAddr =
+    orders.length === 1 && orders[0]?.deliveryAddress ? orders[0].deliveryAddress : defaultAddr;
 
-  const billingAddressLine = defaultAddr
-    ? `${defaultAddr.street}, ${defaultAddr.city}, ${defaultAddr.state} - ${defaultAddr.pinCode}`
+  const billingAddressLine = orderAddr
+    ? `${orderAddr.street}, ${orderAddr.city}, ${orderAddr.state} - ${orderAddr.pinCode}`
     : 'Connaught Place, New Delhi, Delhi - 110001';
 
   const summary = calculatePurchaseHistorySummary(orders);

@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import {
   buildCourierRouteTelemetry,
   getActiveCourierOrders,
+  getBlueDartTrackableOrders,
+  getTrackableOrdersForMiniMap,
   haversineDistanceKm,
+  isBlueDartExpressOrder,
 } from './courierLiveMap';
 import { UserAddress, UserOrder } from '../types/index';
 
@@ -69,6 +72,19 @@ test('getActiveCourierOrders filters out delivered/cancelled and prioritizes Blu
   assert.equal(active[1].id, 'ORD-ACTIVE-OTHER');
 });
 
+test('getTrackableOrdersForMiniMap prioritizes active shipments ahead of delivered ones', () => {
+  const trackable = getTrackableOrdersForMiniMap(SAMPLE_ORDERS);
+  assert.equal(trackable.length, 3);
+  assert.equal(trackable[0].id, 'ORD-ACTIVE-BLUEDART');
+  assert.equal(trackable[1].id, 'ORD-ACTIVE-OTHER');
+  assert.equal(trackable[2].id, 'ORD-DELIVERED');
+
+  const deliveredSnap = buildCourierRouteTelemetry(trackable[2], SAMPLE_ADDRESSES, 0.5);
+  assert.equal(deliveredSnap.stage, 'Delivered');
+  assert.equal(deliveredSnap.progressRatio, 1);
+  assert.equal(deliveredSnap.etaLabel, 'Delivered');
+});
+
 test('buildCourierRouteTelemetry interpolates live BlueDart Express coordinates along route', () => {
   const activeOrder = SAMPLE_ORDERS[2];
   const startSnap = buildCourierRouteTelemetry(activeOrder, SAMPLE_ADDRESSES, 0);
@@ -89,4 +105,44 @@ test('haversineDistanceKm calculates realistic distance between Delhi hubs', () 
     { lat: 28.6315, lng: 77.2167 }
   );
   assert.ok(dist > 8 && dist < 16);
+});
+
+test('getBlueDartTrackableOrders filters strictly to non-cancelled BlueDart orders', () => {
+  const mixedOrders: UserOrder[] = [
+    ...SAMPLE_ORDERS,
+    {
+      ...SAMPLE_ORDERS[2],
+      id: 'ORD-CANCELLED-BLUEDART',
+      status: 'Cancelled',
+    },
+  ];
+  assert.equal(isBlueDartExpressOrder(SAMPLE_ORDERS[1]), false);
+  assert.equal(isBlueDartExpressOrder(SAMPLE_ORDERS[2]), true);
+
+  const bluedartOnly = getBlueDartTrackableOrders(mixedOrders);
+  assert.deepEqual(
+    bluedartOnly.map((o) => o.id),
+    ['ORD-ACTIVE-BLUEDART', 'ORD-DELIVERED']
+  );
+});
+
+test('buildCourierRouteTelemetry prioritizes order.deliveryAddress over default profile address', () => {
+  const mumbaiOrder: UserOrder = {
+    ...SAMPLE_ORDERS[2],
+    courierPartner: 'BlueDart Express',
+    deliveryAddress: {
+      id: 'addr-mumbai',
+      name: 'Shubham Bansal',
+      phone: '+91 98765 43210',
+      street: 'Bandra Kurla Complex',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pinCode: '400051',
+      isDefault: false,
+    },
+  };
+  const snap = buildCourierRouteTelemetry(mumbaiOrder, SAMPLE_ADDRESSES, 0.5);
+  assert.equal(snap.courierDisplayName, 'BlueDart Express');
+  assert.ok(snap.waypoints[3].label.includes('Mumbai (400051)'));
+  assert.ok(Math.abs(snap.waypoints[3].lat - 19.076) < 0.01);
 });

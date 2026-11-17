@@ -32,7 +32,24 @@ const CITY_DESTINATION_COORDS: Record<string, { lat: number; lng: number; label:
   bengaluru: { lat: 12.9716, lng: 77.5946, label: 'Indiranagar Hub, Bengaluru' },
   mumbai: { lat: 19.076, lng: 72.8777, label: 'BKC Express Zone, Mumbai' },
   hyderabad: { lat: 17.385, lng: 78.4867, label: 'HITEC City, Hyderabad' },
+  pune: { lat: 18.5204, lng: 73.8567, label: 'Koregaon Park Hub, Pune' },
+  chennai: { lat: 13.0827, lng: 80.2707, label: 'T. Nagar Express Zone, Chennai' },
+  kolkata: { lat: 22.5726, lng: 88.3639, label: 'Park Street Hub, Kolkata' },
+  ahmedabad: { lat: 23.0225, lng: 72.5714, label: 'SG Highway Hub, Ahmedabad' },
+  jaipur: { lat: 26.9124, lng: 75.7873, label: 'MI Road Dispatch Hub, Jaipur' },
 };
+
+/**
+ * Returns true when an order uses BlueDart Express tracking and is eligible for route visualization.
+ */
+export function isBlueDartExpressOrder(order: UserOrder): boolean {
+  const isTrackableState =
+    order.status !== 'Cancelled' &&
+    order.status !== 'Returned' &&
+    order.trackingStage !== 'Returned';
+  if (!isTrackableState) return false;
+  return (order.courierPartner || '').toLowerCase().includes('bluedart');
+}
 
 /**
  * Filters orders that are actively in transit (not Delivered, Returned, or Cancelled),
@@ -58,9 +75,44 @@ export function getActiveCourierOrders(orders: UserOrder[]): UserOrder[] {
   });
 }
 
-function resolveDestinationPoint(addresses: UserAddress[]): LatLngPoint {
-  const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
-  if (!defaultAddr) {
+/**
+ * Returns all trackable orders for the mini interactive map (excluding Cancelled/Returned),
+ * ordering active transit shipments (BlueDart first) ahead of Delivered shipments.
+ */
+export function getTrackableOrdersForMiniMap(orders: UserOrder[]): UserOrder[] {
+  const trackable = orders.filter(
+    (order) =>
+      order.status !== 'Cancelled' &&
+      order.status !== 'Returned' &&
+      order.trackingStage !== 'Returned'
+  );
+
+  return [...trackable].sort((a, b) => {
+    const aDelivered =
+      a.status === 'Delivered' || a.trackingStage === 'Delivered' ? 1 : 0;
+    const bDelivered =
+      b.status === 'Delivered' || b.trackingStage === 'Delivered' ? 1 : 0;
+    if (aDelivered !== bDelivered) return aDelivered - bDelivered;
+
+    const aBlueDart = (a.courierPartner || '').toLowerCase().includes('bluedart') ? 0 : 1;
+    const bBlueDart = (b.courierPartner || '').toLowerCase().includes('bluedart') ? 0 : 1;
+    return aBlueDart - bBlueDart;
+  });
+}
+
+/**
+ * Filters and sorts BlueDart Express orders, prioritizing active in-transit shipments ahead of Delivered ones.
+ */
+export function getBlueDartTrackableOrders(orders: UserOrder[]): UserOrder[] {
+  return getTrackableOrdersForMiniMap(orders.filter(isBlueDartExpressOrder));
+}
+
+function resolveDestinationPoint(
+  addresses: UserAddress[],
+  orderAddress?: UserAddress
+): LatLngPoint {
+  const targetAddr = orderAddress || addresses.find((a) => a.isDefault) || addresses[0];
+  if (!targetAddr) {
     return {
       lat: 28.6315,
       lng: 77.2167,
@@ -69,13 +121,13 @@ function resolveDestinationPoint(addresses: UserAddress[]): LatLngPoint {
     };
   }
 
-  const cityKey = defaultAddr.city.trim().toLowerCase();
+  const cityKey = targetAddr.city.trim().toLowerCase();
   const matched = CITY_DESTINATION_COORDS[cityKey];
   if (matched) {
     return {
       lat: matched.lat,
       lng: matched.lng,
-      label: `Customer Doorstep · ${defaultAddr.city} (${defaultAddr.pinCode})`,
+      label: `Customer Doorstep · ${targetAddr.city} (${targetAddr.pinCode})`,
       role: 'destination',
     };
   }
@@ -83,7 +135,7 @@ function resolveDestinationPoint(addresses: UserAddress[]): LatLngPoint {
   return {
     lat: 28.6315,
     lng: 77.2167,
-    label: `Customer Doorstep · ${defaultAddr.city} (${defaultAddr.pinCode})`,
+    label: `Customer Doorstep · ${targetAddr.city} (${targetAddr.pinCode})`,
     role: 'destination',
   };
 }
@@ -144,7 +196,7 @@ export function buildCourierRouteTelemetry(
   addresses: UserAddress[] = [],
   liveCycleProgress: number = 0.5
 ): CourierTelemetrySnapshot {
-  const destination = resolveDestinationPoint(addresses);
+  const destination = resolveDestinationPoint(addresses, order.deliveryAddress);
   const isMetroSouth = destination.lat < 22;
 
   const waypoints: LatLngPoint[] = isMetroSouth
@@ -242,9 +294,12 @@ export function buildCourierRouteTelemetry(
       : `${etaMinutes} mins`;
 
   const courierPartnerRaw = order.courierPartner || 'BlueDart Express';
-  const courierDisplayName = courierPartnerRaw.toLowerCase().includes('bluedart')
-    ? `BlueDart Express (${courierPartnerRaw})`
-    : courierPartnerRaw;
+  const courierDisplayName =
+    courierPartnerRaw.trim().toLowerCase() === 'bluedart express'
+      ? 'BlueDart Express'
+      : courierPartnerRaw.toLowerCase().includes('bluedart')
+      ? `BlueDart Express (${courierPartnerRaw})`
+      : courierPartnerRaw;
 
   return {
     orderId: order.id,

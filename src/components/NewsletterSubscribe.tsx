@@ -29,7 +29,7 @@ export const NewsletterSubscribe: React.FC<NewsletterSubscribeProps> = ({
     }
   }, [showToast]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validation = validateNewsletterEmail(email);
@@ -40,23 +40,36 @@ export const NewsletterSubscribe: React.FC<NewsletterSubscribeProps> = ({
 
     setError(null);
     setIsSubmitting(true);
+    const confirmedEmail = email.trim();
 
-    // Simulate async subscription dispatch
-    setTimeout(() => {
-      const confirmedEmail = email.trim();
+    try {
+      const response = await fetch('/api/v1/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: confirmedEmail }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.success) {
+        setError(payload?.error || 'Could not process subscription right now.');
+        setIsSubmitting(false);
+        return;
+      }
+
       setIsSubmitting(false);
       setIsSubscribed(true);
       setSubscribedEmail(confirmedEmail);
       setEmail('');
 
-      const msg = `Welcome to NEXORA Circle! ₹500 discount voucher sent to ${confirmedEmail}.`;
+      const msg = payload.data?.alreadySubscribed
+        ? `${confirmedEmail} is already in NEXORA Circle! Coupon FESTIVE500 remains active.`
+        : `Welcome to NEXORA Circle! ₹500 discount voucher sent to ${confirmedEmail}.`;
       setToastMessage(msg);
       setShowToast(true);
-
-      if (onNotifyToast) {
-        onNotifyToast(msg);
-      }
-    }, 450);
+      onNotifyToast?.(msg);
+    } catch {
+      setIsSubmitting(false);
+      setError('Unable to reach server. Please try again in a moment.');
+    }
   };
 
   const handleReset = () => {

@@ -16,6 +16,7 @@ import {
 import { OrchestratorTask, AgentStatusInfo, AgentLogEntry } from '../server/orchestrator.js';
 import { UserProfile } from '../types/index.js';
 import { SpendingTrendChart } from './SpendingTrendChart.js';
+import { useAuth } from '../contexts/AuthContext.js';
 
 interface CommandCenterProps {
   onBackToStore: () => void;
@@ -23,6 +24,7 @@ interface CommandCenterProps {
 }
 
 export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, currentUser }) => {
+  const { refreshToken } = useAuth();
   const [agents, setAgents] = useState<AgentStatusInfo[]>([]);
   const [tasks, setTasks] = useState<OrchestratorTask[]>([]);
   const [logs, setLogs] = useState<AgentLogEntry[]>([]);
@@ -30,6 +32,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>('');
   const [newTaskPriority, setNewTaskPriority] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM'>('HIGH');
+  const [dispatchError, setDispatchError] = useState<string | null>(null);
 
   const fetchState = async () => {
     try {
@@ -61,10 +64,15 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
     if (!newTaskTitle.trim()) return;
 
     setIsExecuting(true);
+    setDispatchError(null);
     try {
+      const token = await refreshToken().catch(() => null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const res = await fetch('/api/v1/orchestrator/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           title: newTaskTitle.trim(),
           phase: 'PHASE 1',
@@ -72,16 +80,22 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
         }),
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setNewTaskTitle('');
-          await fetchState();
-          setSelectedTask(json.data);
-        }
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.success) {
+        setNewTaskTitle('');
+        await fetchState();
+        setSelectedTask(json.data);
+      } else {
+        setDispatchError(
+          json?.error ||
+            (res.status === 401 || res.status === 403
+              ? 'Admin Firebase sign-in required to dispatch live backend orchestrator tasks.'
+              : 'Failed to dispatch orchestrator task.')
+        );
       }
     } catch (err) {
       console.error('Failed to dispatch task:', err);
+      setDispatchError('Network error while contacting orchestrator API.');
     } finally {
       setIsExecuting(false);
     }
@@ -301,6 +315,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
                 )}
               </button>
             </div>
+            {dispatchError && (
+              <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                {dispatchError}
+              </p>
+            )}
           </form>
         </div>
 

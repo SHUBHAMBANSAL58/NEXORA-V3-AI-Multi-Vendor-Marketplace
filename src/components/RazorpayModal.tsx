@@ -22,14 +22,20 @@ import {
   PlusCircle,
   Sparkles,
   Zap,
+  Mic,
+  MicOff,
+  MapPin,
+  Volume2,
 } from 'lucide-react';
 import { UserProfile, UserAddress } from '../types/index.js';
 import { formatCurrencyINR } from '../utils/formatters.js';
 import {
   getAvailableBusinessDays,
   isValidBusinessDeliveryDate,
-  AvailableBusinessDay,
 } from '../utils/commerceFeatures.js';
+import {
+  parseCheckoutVoiceCommand,
+} from '../utils/voiceCheckoutCommands.js';
 
 interface RazorpayModalProps {
   isOpen: boolean;
@@ -112,8 +118,8 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
   // Netbanking State
   const [selectedBank, setSelectedBank] = useState('HDFC Bank');
 
-  // Address State
-  const defaultAddress: UserAddress = currentUser.addresses[0] || {
+  // Selectable Delivery Address State
+  const fallbackAddress: UserAddress = {
     id: 'addr-default',
     name: currentUser.name,
     phone: currentUser.phone || '+91 98765 43210',
@@ -123,8 +129,36 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
     pinCode: '110001',
     isDefault: true,
   };
+  const availableAddresses: UserAddress[] =
+    currentUser.addresses.length > 0 ? currentUser.addresses : [fallbackAddress];
 
-  const [selectedAddress] = useState<UserAddress>(defaultAddress);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(
+    (availableAddresses.find((a) => a.isDefault) || availableAddresses[0]).id
+  );
+  const selectedAddress: UserAddress =
+    availableAddresses.find((a) => a.id === selectedAddressId) || availableAddresses[0];
+  const alternateAddressCity =
+    availableAddresses.find((addr) => addr.id !== selectedAddress.id)?.city ||
+    availableAddresses.find((addr) => !addr.isDefault)?.city ||
+    availableAddresses[0]?.city ||
+    'New Delhi';
+  const dynamicVoiceHints = [
+    'Confirm address',
+    `Deliver to ${alternateAddressCity}`,
+    'Pay with UPI Google Pay',
+    'Use Cash on Delivery',
+  ];
+
+  // Voice-Command Checkout State (Microphone SpeechRecognition + Manual Fallback)
+  const [voiceEnabled, setVoiceEnabled] = useState<boolean>(false);
+  const [isMicListening, setIsMicListening] = useState<boolean>(false);
+  const [voiceTranscript, setVoiceTranscript] = useState<string>('');
+  const [voiceCommandDraft, setVoiceCommandDraft] = useState<string>('');
+  const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
+  const [voiceErrorMsg, setVoiceErrorMsg] = useState<string | null>(null);
+  const [addressConfirmed, setAddressConfirmed] = useState<boolean>(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState<boolean>(false);
+  const recognitionRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
 
   // Delivery Preferences State
   const availableBusinessDays = React.useMemo(() => getAvailableBusinessDays(8), []);
@@ -175,6 +209,22 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
       setIsProcessing(false);
       setPaymentValidationError(null);
       setWalletBalancePaise(currentUser.walletBalancePaise ?? 500000);
+      setSelectedAddressId(
+        (availableAddresses.find((a) => a.isDefault) || availableAddresses[0]).id
+      );
+      setAddressConfirmed(false);
+      setPaymentConfirmed(false);
+      setVoiceTranscript('');
+      setVoiceFeedback(null);
+      setVoiceErrorMsg(null);
+    }
+    if (!isOpen && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore speech stop errors
+      }
+      setIsMicListening(false);
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, currentUser.walletBalancePaise]);
@@ -190,7 +240,149 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, isProcessing, onClose]);
 
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {
+          // ignore cleanup errors
+        }
+      }
+    };
+  }, []);
+
   if (!isOpen) return null;
+
+  const stopMicrophoneListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore stop errors
+      }
+      recognitionRef.current = null;
+    }
+    setIsMicListening(false);
+  };
+
+  const applyVoiceCommand = (rawPhrase: string) => {
+    const trimmed = rawPhrase.trim();
+    if (!trimmed) return;
+    setVoiceTranscript(trimmed);
+    setVoiceErrorMsg(null);
+
+    const outcome = parseCheckoutVoiceCommand(trimmed, availableAddresses, selectedMethod);
+    setVoiceFeedback(outcome.feedbackMessage);
+
+    if (!outcome.matched) return;
+
+    if (outcome.addressId) {
+      setSelectedAddressId(outcome.addressId);
+    }
+    if (outcome.confirmAddress) {
+      setAddressConfirmed(true);
+    }
+    if (outcome.paymentMethod) {
+      setSelectedMethod(outcome.paymentMethod);
+      setPaymentValidationError(null);
+    }
+    if (outcome.upiApp) {
+      setSelectedApp(outcome.upiApp);
+    }
+    if (outcome.netbankingBank) {
+      setSelectedBank(outcome.netbankingBank);
+    }
+    if (outcome.confirmPayment) {
+      setPaymentConfirmed(true);
+    }
+    if (outcome.submitPayment) {
+      stopMicrophoneListening();
+      handlePay();
+    }
+  };
+
+  const startMicrophoneListening = async () => {
+    setVoiceErrorMsg(null);
+    type SpeechRecognitionLike = {
+      lang: string;
+      interimResults: boolean;
+      maxAlternatives: number;
+      continuous: boolean;
+      onresult: ((ev: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null;
+      onerror: ((ev: { error?: string }) => void) | null;
+      onend: (() => void) | null;
+      start: () => void;
+      stop: () => void;
+      abort: () => void;
+    };
+    const win = window as unknown as {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    };
+    const SpeechRecCtor = win.SpeechRecognition || win.webkitSpeechRecognition;
+
+    if (!SpeechRecCtor) {
+      setVoiceErrorMsg(
+        'Browser Web Speech microphone API is unavailable in this environment. Use the voice command bar below to confirm address or payment.'
+      );
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecCtor();
+      recognition.lang = 'en-IN';
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+
+      recognition.onresult = (event) => {
+        const lastIndex = event.results.length - 1;
+        if (lastIndex < 0) return;
+        const resultItem = event.results[lastIndex];
+        const spoken = resultItem?.[0]?.transcript || '';
+        setVoiceTranscript(spoken);
+        if (resultItem?.isFinal) {
+          applyVoiceCommand(spoken);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        setIsMicListening(false);
+        const reason = event?.error || 'microphone-unavailable';
+        setVoiceErrorMsg(
+          `Microphone input interrupted (${reason}). You can retry or enter a voice phrase below.`
+        );
+      };
+
+      recognition.onend = () => {
+        setIsMicListening(false);
+        recognitionRef.current = null;
+      };
+
+      recognitionRef.current = recognition;
+      setIsMicListening(true);
+      recognition.start();
+    } catch {
+      setIsMicListening(false);
+      setVoiceErrorMsg(
+        'Microphone permission was denied or unavailable. Use the command input below or grant mic permission.'
+      );
+    }
+  };
+
+  const handleToggleVoiceCheckout = () => {
+    setVoiceEnabled((prev) => {
+      const next = !prev;
+      if (!next) {
+        stopMicrophoneListening();
+        setVoiceErrorMsg(null);
+      } else {
+        void startMicrophoneListening();
+      }
+      return next;
+    });
+  };
 
   const validateSelectedMethod = (): string | null => {
     if (selectedMethod === 'upi') {
@@ -307,40 +499,207 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-white dark:bg-[#0c121e] text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[94vh]">
-        
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Razorpay Secure Checkout"
+        className="w-full max-w-2xl bg-white dark:bg-[#0c121e] text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[94vh]"
+      >
         {/* Top Header: Razorpay Official Merchant Banner */}
-        <div className="bg-gradient-to-r from-[#0c2340] to-[#0a192f] text-white p-4 sm:p-5 flex items-center justify-between border-b border-blue-900/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 font-black text-lg font-mono">
+        <div className="bg-gradient-to-r from-[#0c2340] to-[#0a192f] text-white p-4 sm:p-5 flex items-center justify-between gap-3 border-b border-blue-900/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 font-black text-lg font-mono shrink-0">
               N
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-sm tracking-tight text-white">NEXORA Retail India</span>
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                   <Check className="w-2.5 h-2.5" /> Verified Merchant
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-300">
-                <Lock className="w-3 h-3 text-cyan-400" />
-                <span>Razorpay Standard Checkout (Sandbox)</span>
+                <Lock className="w-3 h-3 text-cyan-400 shrink-0" />
+                <span className="truncate">Razorpay Standard Checkout (Sandbox)</span>
               </div>
             </div>
           </div>
 
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">Total Payable</span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-cyan-400">
-              {formatCurrencyINR(effectivePayablePaise)}
-            </span>
-            {useNexPoints && (
-              <span className="text-[10px] font-mono text-emerald-400 block">
-                Saved {formatCurrencyINR(pointsDiscountPaise)} (NexPoints)
+          <div className="flex items-center gap-3 shrink-0">
+            {!isComplete && !isProcessing && (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={voiceEnabled}
+                data-testid="voice-checkout-toggle"
+                onClick={handleToggleVoiceCheckout}
+                className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                  voiceEnabled
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-xs'
+                    : 'bg-white/10 text-slate-100 border-white/20 hover:bg-white/15'
+                }`}
+                aria-label="Toggle voice-command checkout"
+              >
+                {voiceEnabled ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
+                <span>Voice Checkout</span>
+              </button>
+            )}
+
+            <div className="text-right">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">Total Payable</span>
+              <span className="text-lg sm:text-xl font-bold font-mono tabular-nums text-cyan-400">
+                {formatCurrencyINR(effectivePayablePaise)}
               </span>
+              {useNexPoints && (
+                <span className="text-[10px] font-mono text-emerald-400 block">
+                  Saved {formatCurrencyINR(pointsDiscountPaise)} (NexPoints)
+                </span>
+              )}
+            </div>
+
+            {!isProcessing && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close checkout"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
           </div>
         </div>
+
+        {/* Interactive Voice-Command Bar (Visible when Voice Checkout Toggle is ON) */}
+        {voiceEnabled && !isComplete && !isProcessing && (
+          <div
+            data-testid="voice-checkout-panel"
+            className="px-4 sm:px-5 py-3 bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 space-y-2.5 text-xs"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isMicListening) {
+                      stopMicrophoneListening();
+                    } else {
+                      void startMicrophoneListening();
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-colors ${
+                    isMicListening
+                      ? 'bg-rose-600 text-white hover:bg-rose-500'
+                      : 'bg-cyan-600 text-white hover:bg-cyan-500'
+                  }`}
+                >
+                  {isMicListening ? (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+                      <span>Listening... Stop Mic</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-3.5 h-3.5" />
+                      <span>Speak with Mic</span>
+                    </>
+                  )}
+                </button>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Confirm address &amp; payment hands-free
+                </span>
+              </div>
+
+              {/* Explicit Confirmation Checkpoints (Icon + Text, never hue-only) */}
+              <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                <span
+                  data-testid="voice-address-status"
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold ${
+                    addressConfirmed
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>{addressConfirmed ? 'Address Confirmed' : 'Address Pending'}</span>
+                </span>
+                <span
+                  data-testid="voice-payment-status"
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold ${
+                    paymentConfirmed
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>{paymentConfirmed ? 'Payment Confirmed' : 'Payment Pending'}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Spoken Transcript Input & Quick Voice Presets */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyVoiceCommand(voiceCommandDraft);
+                setVoiceCommandDraft('');
+              }}
+              className="flex flex-wrap items-center gap-2"
+            >
+              <input
+                type="text"
+                value={voiceCommandDraft}
+                onChange={(e) => setVoiceCommandDraft(e.target.value)}
+                placeholder={`Say or type e.g. "Confirm address", "Deliver to ${alternateAddressCity}", "Pay with UPI"`}
+                aria-label="Speak or type checkout voice command"
+                className="flex-1 min-w-[200px] px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              />
+              <button
+                type="submit"
+                className="px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-[11px] hover:bg-cyan-600 dark:hover:bg-cyan-400 whitespace-nowrap cursor-pointer transition-colors"
+              >
+                Confirm Command
+              </button>
+            </form>
+
+            <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Try:</span>
+              {dynamicVoiceHints.map((hint) => (
+                <button
+                  key={hint}
+                  type="button"
+                  onClick={() => applyVoiceCommand(hint)}
+                  className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-cyan-500 cursor-pointer transition-colors whitespace-nowrap"
+                >
+                  "{hint}"
+                </button>
+              ))}
+            </div>
+
+            {(voiceTranscript || voiceFeedback || voiceErrorMsg) && (
+              <div className="space-y-1 pt-0.5">
+                {voiceTranscript && (
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                    Transcript: <strong className="font-mono">"{voiceTranscript}"</strong>
+                  </p>
+                )}
+                {voiceFeedback && (
+                  <p
+                    data-testid="voice-command-feedback"
+                    className="text-[11px] font-medium text-cyan-700 dark:text-cyan-300"
+                  >
+                    {voiceFeedback}
+                  </p>
+                )}
+                {voiceErrorMsg && (
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                    {voiceErrorMsg}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Modal Body / Gateway Process */}
         {isComplete ? (
@@ -525,11 +884,53 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 </div>
               </div>
 
-              {/* Delivery Address Pill */}
-              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500">
-                <span className="font-mono uppercase text-[9px] text-slate-400 block mb-1">Delivering To</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{selectedAddress.name}</p>
-                <p className="text-slate-500 truncate">{selectedAddress.street}, {selectedAddress.city} - {selectedAddress.pinCode}</p>
+              {/* Delivery Address Selector & Confirmation */}
+              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono uppercase text-[9px] text-slate-400 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-cyan-500" />
+                    <span>Delivering To</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAddressConfirmed(true)}
+                    className={`text-[10px] font-semibold cursor-pointer flex items-center gap-1 ${
+                      addressConfirmed
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-cyan-600 dark:text-cyan-400 hover:underline'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{addressConfirmed ? 'Confirmed' : 'Confirm Address'}</span>
+                  </button>
+                </div>
+
+                {availableAddresses.length > 1 ? (
+                  <select
+                    aria-label="Select delivery address"
+                    value={selectedAddress.id}
+                    onChange={(e) => {
+                      setSelectedAddressId(e.target.value);
+                      setAddressConfirmed(true);
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-medium text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  >
+                    {availableAddresses.map((addr) => (
+                      <option key={addr.id} value={addr.id}>
+                        {addr.city} ({addr.pinCode}) · {addr.street}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {selectedAddress.name}
+                    </p>
+                    <p className="text-slate-500 truncate">
+                      {selectedAddress.street}, {selectedAddress.city} - {selectedAddress.pinCode}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Preferred Delivery Date (Business Days Only) */}

@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { PRODUCTS_CATALOG } from '../data/productsCatalog.js';
+import { db, DBProduct } from './db.js';
 
 export interface NovaChatTurn {
   role: 'user' | 'assistant';
@@ -11,6 +11,7 @@ export interface NovaChatResult {
   reply: string;
   recommendedProductTitle?: string;
   model: string;
+  mode: 'gemini-live' | 'offline-catalog-fallback';
 }
 
 export interface NovaChatError {
@@ -19,8 +20,8 @@ export interface NovaChatError {
   error: string;
 }
 
-function buildCatalogContext(): string {
-  const compactItems = PRODUCTS_CATALOG.slice(0, 36).map((p) => ({
+function buildCatalogContext(products: DBProduct[]): string {
+  const compactItems = products.map((p) => ({
     id: p.id,
     title: p.title,
     brand: p.brand,
@@ -28,56 +29,86 @@ function buildCatalogContext(): string {
     priceINR: Math.round(p.pricePaise / 100),
     stock: p.stock,
     rating: p.rating,
+    hsn: p.hsnCode,
     seller: `${p.seller.storeName} (${p.seller.city})`,
   }));
 
   return JSON.stringify(compactItems);
 }
 
-function findRecommendedCatalogTitle(replyText: string, userMessage: string): string | undefined {
-  const combined = `${replyText} ${userMessage}`.toLowerCase();
-  const directMatch = PRODUCTS_CATALOG.find((p) => combined.includes(p.title.toLowerCase()));
-  if (directMatch) return directMatch.title;
+function scoreCatalogProducts(queryText: string, products: DBProduct[]): DBProduct[] {
+  const normalized = queryText.toLowerCase();
+  const direct = products.filter((p) => normalized.includes(p.title.toLowerCase()));
+  if (direct.length > 0) return direct;
 
-  const keywords = combined
+  const keywords = normalized
     .split(/[^a-z0-9]+/)
-    .filter((w) => w.length >= 4);
+    .filter((w) => w.length >= 3);
 
-  let bestProduct: (typeof PRODUCTS_CATALOG)[number] | undefined;
-  let bestScore = 0;
+  const scored = products
+    .map((product) => {
+      const haystack = `${product.title} ${product.brand} ${product.category} ${product.tagline} ${product.tags.join(' ')}`.toLowerCase();
+      let score = 0;
+      for (const kw of keywords) {
+        if (haystack.includes(kw)) score += 1;
+      }
+      return { product, score };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
 
-  for (const product of PRODUCTS_CATALOG) {
-    const haystack = `${product.title} ${product.brand} ${product.category} ${product.tags.join(' ')}`.toLowerCase();
-    let score = 0;
-    for (const kw of keywords) {
-      if (haystack.includes(kw)) score += 1;
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      bestProduct = product;
-    }
+  return scored.map((s) => s.product);
+}
+
+export function buildOfflineCatalogReply(message: string, products: DBProduct[]): NovaChatResult {
+  const matches = scoreCatalogProducts(message, products);
+  const top = matches[0] || products[0];
+
+  if (!top) {
+    return {
+      ok: true,
+      reply:
+        'NOVA Offline Catalog Search: No published items matched your query. Try browsing Audio, Keyboards, Timepieces, or Workspace categories.',
+      model: 'catalog-keyword-engine',
+      mode: 'offline-catalog-fallback',
+    };
   }
 
-  return bestScore >= 2 ? bestProduct?.title : undefined;
+  const secondary = matches[1];
+  const priceStr = `₹${Math.round(top.pricePaise / 100).toLocaleString('en-IN')}`;
+  const secondaryNote = secondary
+    ? ` Also consider ${secondary.title} at ₹${Math.round(secondary.pricePaise / 100).toLocaleString('en-IN')} (${secondary.seller.city}).`
+    : '';
+
+  return {
+    ok: true,
+    reply: `${top.title} by ${top.brand} is available at ${priceStr} (18% GST inclusive) from ${top.seller.storeName} in ${top.seller.city} with ${top.stock} units in stock.${secondaryNote} Orders above ₹999 ship free via BlueDart Express with 7-day returns.`,
+    recommendedProductTitle: top.title,
+    model: 'catalog-keyword-engine',
+    mode: 'offline-catalog-fallback',
+  };
 }
 
 export async function generateNovaReply(
   message: string,
   history: NovaChatTurn[] = []
 ): Promise<NovaChatResult | NovaChatError> {
+  const products = await db.getProducts({ includeUnpublished: false });
   const apiKey = process.env.GEMINI_API_KEY?.trim();
 
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
-    return {
-      ok: false,
-      status: 503,
-      error:
-        'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY in Settings > Secrets to enable live NOVA AI responses.',
-    };
+    return buildOfflineCatalogReply(message, products);
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
     const model = 'gemini-4-hydrogen';
 
     const historyText = history
@@ -92,7 +123,7 @@ export async function generateNovaReply(
       '- Mention Pan-India Express Delivery (free above ₹999) and 7-day hassle-free returns when relevant.',
       '- Keep replies crisp (3-5 sentences max), accurate, and helpful. Never fabricate stock or specs.',
       '',
-      `Verified Catalog Snapshot JSON: ${buildCatalogContext()}`,
+      `Verified Live Catalog JSON (${products.length} items): ${buildCatalogContext(products)}`,
       historyText ? `\nRecent Conversation:\n${historyText}` : '',
       `\nCustomer Question: ${message}`,
     ]
@@ -128,28 +159,22 @@ export async function generateNovaReply(
 
     const reply = responseText;
     if (!reply) {
-      return {
-        ok: false,
-        status: 502,
-        error: 'Gemini returned an empty response. Please try rephrasing your question.',
-      };
+      return buildOfflineCatalogReply(message, products);
     }
 
-    const recommendedProductTitle = findRecommendedCatalogTitle(reply, message);
+    const recommended = scoreCatalogProducts(`${reply} ${message}`, products)[0];
     return {
       ok: true,
       reply,
-      recommendedProductTitle,
+      recommendedProductTitle: recommended?.title,
       model,
+      mode: 'gemini-live',
     };
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Gemini API error';
-    const status =
-      errorMessage.includes('503') || errorMessage.includes('UNAVAILABLE') ? 503 : 502;
-    return {
-      ok: false,
-      status,
-      error: `Live NOVA AI request failed: ${errorMessage}`,
-    };
+    console.warn(
+      '[NOVA] Gemini unavailable, serving offline catalog fallback:',
+      err instanceof Error ? err.message : err
+    );
+    return buildOfflineCatalogReply(message, products);
   }
 }

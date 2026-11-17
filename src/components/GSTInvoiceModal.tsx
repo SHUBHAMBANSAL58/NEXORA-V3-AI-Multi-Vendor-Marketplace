@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Printer, Download, ShieldCheck, FileText, Gift, Eye, EyeOff } from 'lucide-react';
 import { UserOrder, UserProfile } from '../types/index.js';
 import { formatCurrencyINR } from '../utils/formatters.js';
+import { getIndianStateCode, getProductHsnCode } from '../utils/commerceFeatures.js';
+import { PRODUCTS_CATALOG } from '../data/productsCatalog.js';
 
 import { exportOrderHistoryToPdf } from '../utils/pdfInvoiceExporter.js';
 
@@ -36,6 +38,7 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
   if (!isOpen || !order) return null;
 
   const defaultAddr = user.addresses.find((a) => a.isDefault) || user.addresses[0];
+  const billingAddr = order.deliveryAddress || defaultAddr;
 
   // Financials in paise: total includes 18% GST
   const totalPaise = order.totalPaise;
@@ -193,24 +196,24 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
           <div className="grid grid-cols-2 gap-6 p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Billed To & Shipped To:
+                Billed To &amp; Shipped To:
               </p>
               <p className="font-bold text-slate-900 text-xs">
-                {defaultAddr?.name || user.name}
+                {billingAddr?.name || user.name}
               </p>
               <p className="text-slate-600 text-[11px] mt-0.5 leading-relaxed">
-                {defaultAddr?.street || '42, Barakhamba Road, Connaught Place'}<br />
-                {defaultAddr?.city || 'New Delhi'}, {defaultAddr?.state || 'Delhi'} —{' '}
-                <span className="font-mono font-semibold">{defaultAddr?.pinCode || '110001'}</span>
+                {billingAddr?.street || '42, Barakhamba Road, Connaught Place'}<br />
+                {billingAddr?.city || 'New Delhi'}, {billingAddr?.state || 'Delhi'} —{' '}
+                <span className="font-mono font-semibold">{billingAddr?.pinCode || '110001'}</span>
               </p>
               <p className="text-slate-500 text-[11px] mt-1">
-                Phone: {defaultAddr?.phone || user.phone || '+91 98765 43210'} · Email: {user.email}
+                Phone: {billingAddr?.phone || user.phone || '+91 98765 43210'} · Email: {user.email}
               </p>
             </div>
 
             <div className="border-l border-slate-200 pl-6 space-y-1 text-[11px] text-slate-600">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Dispatch & Payment Details:
+                Dispatch &amp; Payment Details:
               </p>
               <p>
                 <strong>Courier Partner:</strong> {order.courierPartner || 'BlueDart Express Air'}
@@ -223,7 +226,7 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
                 <strong>Payment Mode:</strong> {isMasked ? 'Prepaid (Masked)' : order.paymentMethod}
               </p>
               <p>
-                <strong>Place of Supply:</strong> Delhi (07)
+                <strong>Place of Supply:</strong> {getIndianStateCode(billingAddr?.state)}
               </p>
             </div>
           </div>
@@ -244,11 +247,15 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {order.items.map((item, idx) => {
+                  const catalogMatch = PRODUCTS_CATALOG.find(
+                    (p) => p.title.trim().toLowerCase() === item.title.trim().toLowerCase()
+                  );
+                  const hsn = getProductHsnCode(catalogMatch?.categorySlug);
                   return (
                     <tr key={idx}>
                       <td className="p-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
                       <td className="p-3 font-semibold text-slate-800">{item.title}</td>
-                      <td className="p-3 font-mono text-slate-500 text-[11px]">85183000</td>
+                      <td className="p-3 font-mono text-slate-500 text-[11px]">{hsn}</td>
                       <td className="p-3 text-right font-mono">{item.quantity}</td>
                       <td className="p-3 text-right font-mono">
                         {isMasked ? (

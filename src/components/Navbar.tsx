@@ -32,6 +32,8 @@ interface NavbarProps {
   onSearchSubmit?: (query: string) => void;
   onOpenCommandCenter?: () => void;
   onOpenUserAccount?: (tab?: 'profile' | 'addresses' | 'orders' | 'login') => void;
+  onOpenSellerPortal?: () => void;
+  onOpenAdminPortal?: () => void;
   onOpenNovaAssistant?: () => void;
   onQuickFilter?: (filter: 'top-sellers' | 'new-releases' | 'studio-deals') => void;
 }
@@ -46,6 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSearchSubmit,
   onOpenCommandCenter,
   onOpenUserAccount,
+  onOpenSellerPortal,
+  onOpenAdminPortal,
   onOpenNovaAssistant,
   onQuickFilter,
 }) => {
@@ -331,17 +335,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Cpu className="w-5 h-5 text-indigo-400" />
             </button>
 
-            {/* USER PROFILE PLACEHOLDER & DROPDOWN */}
+            {/* USER PROFILE & DROPDOWN */}
             <div className="relative" ref={profileMenuRef}>
               <button
                 type="button"
-                onClick={() => {
-                  if (onOpenUserAccount) {
-                    onOpenUserAccount('profile');
-                  } else {
-                    setIsProfileOpen(!isProfileOpen);
-                  }
-                }}
+                onClick={() => setIsProfileOpen((prev) => !prev)}
                 className="flex items-center gap-2 p-1 sm:p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 aria-expanded={isProfileOpen}
                 aria-label="User profile account menu"
@@ -402,12 +400,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                       type="button"
                       onClick={() => {
                         setIsProfileOpen(false);
+                        onOpenUserAccount?.('profile');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer"
+                    >
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span>My Account &amp; Wallet</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
                         onOpenUserAccount?.('orders');
                       }}
                       className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer"
                     >
                       <Package className="w-4 h-4 text-slate-400" />
-                      <span>My Orders & Invoices ({currentUser?.orders.length || 0})</span>
+                      <span>My Orders &amp; Invoices ({currentUser?.orders.length || 0})</span>
                     </button>
                     <button
                       type="button"
@@ -433,13 +442,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   </div>
 
-                  {/* Multi-Vendor Role Switches */}
+                  {/* Multi-Vendor Role Portals */}
                   <div className="my-1 border-t border-slate-100 dark:border-slate-800 py-1 text-sm">
                     <button
                       type="button"
                       onClick={() => {
                         setIsProfileOpen(false);
-                        onOpenUserAccount?.('profile');
+                        if (onOpenSellerPortal) {
+                          onOpenSellerPortal();
+                        } else {
+                          onOpenUserAccount?.('profile');
+                        }
                       }}
                       className="w-full flex items-center justify-between px-4 py-2 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-colors font-medium text-left cursor-pointer"
                     >
@@ -455,7 +468,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       type="button"
                       onClick={() => {
                         setIsProfileOpen(false);
-                        onOpenUserAccount?.('profile');
+                        if (onOpenAdminPortal) {
+                          onOpenAdminPortal();
+                        } else {
+                          onOpenUserAccount?.('profile');
+                        }
                       }}
                       className="w-full flex items-center justify-between px-4 py-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors font-medium text-left cursor-pointer"
                     >
@@ -647,12 +664,31 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    onOpenUserAccount?.('profile');
+                    if (onOpenSellerPortal) {
+                      onOpenSellerPortal();
+                    } else {
+                      onOpenUserAccount?.('profile');
+                    }
                   }}
                   className="w-full flex items-center gap-2 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 cursor-pointer"
                 >
                   <Store className="w-4 h-4" />
-                  <span>Become a Verified Seller</span>
+                  <span>Seller Central Hub</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (onOpenAdminPortal) {
+                      onOpenAdminPortal();
+                    } else {
+                      onOpenUserAccount?.('profile');
+                    }
+                  }}
+                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>Admin Governance</span>
                 </button>
                 <button
                   type="button"

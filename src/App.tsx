@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { Navbar } from './components/Navbar.js';
 import { Hero } from './components/Hero.js';
 import { TrustBar } from './components/TrustBar.js';
@@ -6,7 +6,6 @@ import { FeaturedGrid } from './components/FeaturedGrid.js';
 import { CartDrawer, CartLineItem } from './components/CartDrawer.js';
 import { NovaModal } from './components/NovaModal.js';
 import { Footer } from './components/Footer.js';
-import { CommandCenter } from './components/CommandCenter.js';
 import { UserAccount, DEMO_USERS } from './components/UserAccount.js';
 import { QuickViewModal } from './components/QuickViewModal.js';
 import { WishlistDrawer } from './components/WishlistDrawer.js';
@@ -17,20 +16,30 @@ import { PriceAlertModal } from './components/PriceAlertModal.js';
 import {
   ProductVariant,
   CatalogProduct,
+  CatalogProductWithMeta,
   Product,
   UserProfile,
+  UserAddress,
   UserOrder,
   UserReview,
   PriceAlert,
   PromoDiscount,
   BulkOrderInquiry,
+  SellerProfile,
+  ManagedCategory,
+  AdminAuditLog,
+  OrderStage,
+  CategoryItem,
 } from './types/index.js';
 import { FEATURED_PRODUCT } from './data/mockData.js';
-import { PRODUCTS_CATALOG } from './data/productsCatalog.js';
+import { PRODUCTS_CATALOG, EXPANDED_CATEGORIES } from './data/productsCatalog.js';
 import { formatCurrencyINR } from './utils/formatters.js';
 import {
   calculateCartTotals,
   applyOrderWalletAndPoints,
+  VALID_PROMO_CODES,
+  getProductHsnCode,
+  canCancelOrder,
 } from './utils/commerceFeatures.js';
 import { useAuth } from './contexts/AuthContext.js';
 import {
@@ -40,6 +49,129 @@ import {
   subscribeUserWishlist,
   syncUserRecordsToFirestore,
 } from './services/firestoreSync.js';
+
+const CommandCenter = React.lazy(() =>
+  import('./components/CommandCenter.js').then((m) => ({ default: m.CommandCenter }))
+);
+const SellerDashboardModal = React.lazy(() =>
+  import('./components/SellerDashboardModal.js').then((m) => ({ default: m.SellerDashboardModal }))
+);
+const AdminDashboardModal = React.lazy(() =>
+  import('./components/AdminDashboardModal.js').then((m) => ({ default: m.AdminDashboardModal }))
+);
+
+const INITIAL_SELLERS: SellerProfile[] = [
+  {
+    id: 's-tech-1',
+    storeName: 'Aether Technologies Bangalore',
+    ownerName: 'Vikramaditya Sen',
+    gstin: '29AAACL1234F1Z8',
+    email: 'contact@aethermobile.in',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 48500000,
+  },
+  {
+    id: 's-tech-2',
+    storeName: 'Vortex Studio Gurgaon',
+    ownerName: 'Raghav Khurana',
+    gstin: '06AABCV7890E1Z1',
+    email: 'ops@vortexstudio.in',
+    city: 'Gurugram',
+    state: 'Haryana',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 27400000,
+  },
+  {
+    id: 's-tech-3',
+    storeName: 'Kala Studio Systems Hyderabad',
+    ownerName: 'Karthik Reddy',
+    gstin: '36AABCK4812P1Z4',
+    email: 'studio@kalasystems.in',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 31200000,
+  },
+  {
+    id: 's-tech-4',
+    storeName: 'Digital Craft Hub Mumbai',
+    ownerName: 'Siddharth Deshmukh',
+    gstin: '27AABCD1122K1Z9',
+    email: 'care@digitalcrafthub.in',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 21500000,
+  },
+  {
+    id: 's-audio-1',
+    storeName: 'Lumina Soundworks Studio',
+    ownerName: 'Ananya Verma',
+    gstin: '07AAACL9981M1Z2',
+    email: 'hello@luminasoundworks.in',
+    city: 'New Delhi',
+    state: 'Delhi',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 36800000,
+  },
+  {
+    id: 's-audio-2',
+    storeName: 'Aura Acoustic Labs Pune',
+    ownerName: 'Nikhil Joshi',
+    gstin: '27AAACA5544B1Z6',
+    email: 'support@auraacoustics.in',
+    city: 'Pune',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 19600000,
+  },
+];
+
+const INITIAL_MANAGED_CATEGORIES: ManagedCategory[] = EXPANDED_CATEGORIES.map((c) => ({
+  id: c.id,
+  name: c.name,
+  slug: c.slug,
+  description: `${c.name} curated collection`,
+  hsnDefault: getProductHsnCode(c.slug),
+  gstRate: 18,
+  itemCount:
+    c.slug === 'all'
+      ? PRODUCTS_CATALOG.length
+      : PRODUCTS_CATALOG.filter((p) => p.categorySlug === c.slug).length,
+}));
+
+const INITIAL_CATALOG_PRODUCTS: CatalogProductWithMeta[] = PRODUCTS_CATALOG.map((p) => ({
+  ...p,
+  hsnCode: getProductHsnCode(p.categorySlug),
+  isPublished: true,
+}));
+
+const INITIAL_AUDIT_LOGS: AdminAuditLog[] = [
+  {
+    id: 'aud-boot-01',
+    actorEmail: 'bansalshubham662@gmail.com',
+    actorRole: 'system',
+    action: 'PLATFORM_INITIALIZED',
+    targetType: 'category',
+    targetId: 'marketplace-v3',
+    details: 'NEXORA V3 multi-vendor marketplace governance bootstrapped.',
+    timestamp: new Date().toISOString(),
+  },
+];
 
 const INITIAL_REVIEWS: UserReview[] = [
   {
@@ -95,6 +227,19 @@ const INITIAL_REVIEWS: UserReview[] = [
 export default function App() {
   const { firebaseUser, authReady, refreshToken } = useAuth();
   const [viewMode, setViewMode] = useState<'storefront' | 'command-center'>('storefront');
+
+  // Dynamic Multi-Vendor Marketplace State
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProductWithMeta[]>(INITIAL_CATALOG_PRODUCTS);
+  const [sellers, setSellers] = useState<SellerProfile[]>(INITIAL_SELLERS);
+  const [managedCategories, setManagedCategories] = useState<ManagedCategory[]>(INITIAL_MANAGED_CATEGORIES);
+  const [coupons, setCoupons] = useState<PromoDiscount[]>(() =>
+    Object.values(VALID_PROMO_CODES).map((c) => ({ ...c, isActive: true, usageCount: 0 }))
+  );
+  const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>(INITIAL_AUDIT_LOGS);
+
+  // Portal Modals State
+  const [isSellerPortalOpen, setIsSellerPortalOpen] = useState<boolean>(false);
+  const [isAdminPortalOpen, setIsAdminPortalOpen] = useState<boolean>(false);
 
   // Shopping Cart & User State (persisted safely in localStorage)
   const [cartItems, setCartItems] = useState<CartLineItem[]>(() => {
@@ -164,6 +309,52 @@ export default function App() {
   });
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
 
+  // Hydrate public marketplace catalog, categories, active coupons, and reviews on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [prodRes, catRes, coupRes, revRes] = await Promise.all([
+          fetch('/api/v1/products?limit=200'),
+          fetch('/api/v1/categories'),
+          fetch('/api/v1/coupons/active'),
+          fetch('/api/v1/reviews'),
+        ]);
+        if (cancelled) return;
+
+        if (prodRes.ok) {
+          const json = await prodRes.json();
+          if (Array.isArray(json?.data) && json.data.length > 0) {
+            setCatalogProducts(json.data);
+          }
+        }
+        if (catRes.ok) {
+          const json = await catRes.json();
+          if (Array.isArray(json?.data) && json.data.length > 0) {
+            setManagedCategories(json.data);
+          }
+        }
+        if (coupRes.ok) {
+          const json = await coupRes.json();
+          if (Array.isArray(json?.data) && json.data.length > 0) {
+            setCoupons(json.data);
+          }
+        }
+        if (revRes.ok) {
+          const json = await revRes.json();
+          if (Array.isArray(json?.data) && json.data.length > 0) {
+            setReviews(json.data);
+          }
+        }
+      } catch {
+        // graceful offline resilience with seeded local catalog
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     try {
       window.localStorage.setItem('nexora_compared_ids', JSON.stringify(Array.from(comparedIds)));
@@ -188,7 +379,7 @@ export default function App() {
     }
   }, [wishlistedIds]);
 
-  // Hydrate authenticated user orders, bulk inquiries, and Firestore profile/wishlist
+  // Hydrate authenticated user profile, orders, bulk inquiries, and Firestore profile/wishlist
   useEffect(() => {
     if (!authReady || !firebaseUser) return;
 
@@ -209,13 +400,38 @@ export default function App() {
         if (!token || cancelled) return;
 
         const headers = { Authorization: `Bearer ${token}` };
-        const [ordersRes, inquiriesRes] = await Promise.all([
+        const [meRes, ordersRes, inquiriesRes] = await Promise.all([
+          fetch('/api/v1/auth/me', { headers }),
           fetch('/api/v1/orders', { headers }),
           fetch('/api/v1/bulk-inquiries', { headers }),
         ]);
+        const meJson = meRes.ok ? await meRes.json() : null;
         const ordersJson = ordersRes.ok ? await ordersRes.json() : null;
         const inquiriesJson = inquiriesRes.ok ? await inquiriesRes.json() : null;
         if (cancelled) return;
+
+        if (meJson?.success && meJson.data) {
+          setCurrentUser((prev) => ({
+            ...prev,
+            role: meJson.data.role || prev.role,
+            loyaltyPoints: meJson.data.loyaltyPoints ?? prev.loyaltyPoints,
+            tier: meJson.data.tier ?? prev.tier,
+            walletBalancePaise: meJson.data.walletBalancePaise ?? prev.walletBalancePaise,
+          }));
+
+          if (meJson.data.role === 'admin') {
+            fetch('/api/v1/admin/overview', { headers })
+              .then((r) => (r.ok ? r.json() : null))
+              .then((ov) => {
+                if (!cancelled && ov?.success && ov.data) {
+                  if (Array.isArray(ov.data.sellers)) setSellers(ov.data.sellers);
+                  if (Array.isArray(ov.data.auditLogs)) setAuditLogs(ov.data.auditLogs);
+                  if (Array.isArray(ov.data.coupons)) setCoupons(ov.data.coupons);
+                }
+              })
+              .catch(() => {});
+          }
+        }
 
         const serverOrders = Array.isArray(ordersJson?.data)
           ? (ordersJson.data as UserOrder[])
@@ -306,6 +522,25 @@ export default function App() {
   const [quickFilter, setQuickFilter] = useState<'all' | 'top-sellers' | 'new-releases' | 'studio-deals'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const couponMap = useMemo(() => {
+    const map: Record<string, PromoDiscount> = {};
+    coupons.forEach((c) => {
+      map[c.code.toUpperCase()] = c;
+    });
+    return map;
+  }, [coupons]);
+
+  const categoryItemsForGrid: CategoryItem[] = useMemo(
+    () =>
+      managedCategories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        itemCount: `${c.itemCount} products`,
+      })),
+    [managedCategories]
+  );
+
   // Compute total quantity in cart
   const cartTotals = calculateCartTotals(cartItems, appliedPromo);
   const cartCount = cartTotals.totalQuantity;
@@ -315,6 +550,23 @@ export default function App() {
     setTimeout(() => {
       setToastMessage(null);
     }, 3200);
+  };
+
+  const appendLocalAudit = (entry: Omit<AdminAuditLog, 'id' | 'timestamp'>) => {
+    setAuditLogs((prev) => [
+      {
+        ...entry,
+        id: `aud-${Date.now().toString(36)}`,
+        timestamp: new Date().toISOString(),
+      },
+      ...prev,
+    ]);
+  };
+
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    if (!firebaseUser) return {};
+    const token = await refreshToken().catch(() => null);
+    return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
   // Comparison Handlers
@@ -350,7 +602,7 @@ export default function App() {
     showToast('Comparison cleared');
   };
 
-  const comparedProducts = PRODUCTS_CATALOG.filter((p) => comparedIds.has(p.id));
+  const comparedProducts = catalogProducts.filter((p) => comparedIds.has(p.id));
 
   // Price Drop Alert Handlers
   const handleOpenPriceAlert = (product: CatalogProduct) => {
@@ -367,7 +619,7 @@ export default function App() {
 
   const handleSimulatePriceDrop = (product: CatalogProduct, alertPricePaise: number) => {
     showToast(
-      `⚡ Live Price Drop Alert: ${product.title} dropped to ${formatCurrencyINR(alertPricePaise)} (Target reached!)`
+      `Live Price Drop Alert: ${product.title} dropped to ${formatCurrencyINR(alertPricePaise)} (Target reached!)`
     );
   };
 
@@ -380,6 +632,13 @@ export default function App() {
       helpfulCount: 0,
     };
     setReviews((prev) => [fullReview, ...prev]);
+
+    fetch('/api/v1/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRev),
+    }).catch(() => {});
+
     showToast(`Thank you ${newRev.author}! Your verified review has been published.`);
   };
 
@@ -512,6 +771,17 @@ export default function App() {
     }
   };
 
+  const handleClearWishlist = () => {
+    const currentIds = Array.from(wishlistedIds);
+    setWishlistedIds(new Set());
+    if (firebaseUser && firebaseUser.emailVerified) {
+      currentIds.forEach((id) => {
+        removeWishlistItemFromFirestore(firebaseUser.uid, id).catch(() => {});
+      });
+    }
+    showToast('Wishlist cleared');
+  };
+
   const handleOpenQuickView = (product: CatalogProduct) => {
     setQuickViewProduct(product);
     setIsQuickViewOpen(true);
@@ -584,6 +854,7 @@ export default function App() {
   const handlePaymentSuccess = (paymentInfo: {
     paymentId: string;
     method: string;
+    deliveryAddress: UserAddress;
     preferredDeliveryDate?: string;
     orderNotes?: string;
     isGiftReceipt?: boolean;
@@ -603,10 +874,14 @@ export default function App() {
       courierPartner: 'BlueDart Express Air',
       trackingNumber: `BLD-${Math.floor(10000000 + Math.random() * 90000000)}`,
       estimatedDeliveryDate: paymentInfo.preferredDeliveryDate || 'Tomorrow by 8:00 PM',
+      deliveryAddress: paymentInfo.deliveryAddress,
       preferredDeliveryDate: paymentInfo.preferredDeliveryDate,
       orderNotes: paymentInfo.orderNotes,
       isGiftReceipt: paymentInfo.isGiftReceipt,
       giftMessage: paymentInfo.giftMessage,
+      promoCode: appliedPromo?.code,
+      discountPaise: cartTotals.discountPaise,
+      paymentMode: 'sandbox-demo',
       paymentMethod: `${paymentInfo.method} · Ref #${paymentInfo.paymentId}`,
       items: cartItems.map((item) => ({
         title: item.productTitle,
@@ -631,6 +906,36 @@ export default function App() {
       walletBalancePaise: outcome.nextWalletPaise,
       orders: [newOrder, ...prev.orders],
     }));
+
+    // Deduct stock in storefront state and update coupon usage count
+    setCatalogProducts((prev) =>
+      prev.map((prod) => {
+        const matchedQty = cartItems
+          .filter((ci) => ci.productTitle.trim().toLowerCase() === prod.title.trim().toLowerCase())
+          .reduce((sum, ci) => sum + ci.quantity, 0);
+        if (matchedQty <= 0) return prod;
+        return { ...prod, stock: Math.max(0, prod.stock - matchedQty) };
+      })
+    );
+
+    if (appliedPromo) {
+      setCoupons((prev) =>
+        prev.map((c) =>
+          c.code.toUpperCase() === appliedPromo.code.toUpperCase()
+            ? { ...c, usageCount: (c.usageCount || 0) + 1 }
+            : c
+        )
+      );
+    }
+
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'ORDER_CREATED',
+      targetType: 'order',
+      targetId: newOrder.id,
+      details: `Order placed for ${formatCurrencyINR(totalPaise)} (${paymentInfo.deliveryAddress.city}, ${paymentInfo.deliveryAddress.pinCode})`,
+    });
 
     if (firebaseUser) {
       refreshToken()
@@ -670,6 +975,235 @@ export default function App() {
     );
   };
 
+  // Customer Order Cancellation (with stock restoration & backend sync)
+  const handleCancelOrder = (orderId: string, reason = 'Cancelled by customer') => {
+    const targetOrder = currentUser.orders.find((o) => o.id === orderId);
+    if (!targetOrder || !canCancelOrder(targetOrder)) return;
+
+    const cancelledAt = new Date().toISOString();
+    setCurrentUser((prev) => ({
+      ...prev,
+      orders: prev.orders.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              status: 'Cancelled',
+              cancelledAt,
+              cancellationReason: reason,
+            }
+          : o
+      ),
+    }));
+
+    // Restore stock for cancelled items
+    setCatalogProducts((prev) =>
+      prev.map((prod) => {
+        const restoredQty = targetOrder.items
+          .filter((it) => it.title.trim().toLowerCase() === prod.title.trim().toLowerCase())
+          .reduce((sum, it) => sum + it.quantity, 0);
+        if (restoredQty <= 0) return prod;
+        return { ...prod, stock: prod.stock + restoredQty };
+      })
+    );
+
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'ORDER_CANCELLED',
+      targetType: 'order',
+      targetId: orderId,
+      details: `${reason} — inventory restored`,
+    });
+
+    if (firebaseUser) {
+      getAuthHeaders()
+        .then((headers) => {
+          if (!headers.Authorization) return;
+          return fetch(`/api/v1/orders/${encodeURIComponent(orderId)}/cancel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...headers },
+            body: JSON.stringify({ reason }),
+          });
+        })
+        .catch(() => {});
+    }
+
+    showToast(`Order ${orderId} cancelled and inventory restored.`);
+  };
+
+  // Multi-Vendor Seller & Admin State Handlers
+  const handleCreateSellerProduct = (product: CatalogProductWithMeta) => {
+    setCatalogProducts((prev) => [product, ...prev]);
+    setManagedCategories((prev) =>
+      prev.map((c) => {
+        if (c.slug === 'all' || c.slug === product.categorySlug) {
+          return { ...c, itemCount: c.itemCount + 1 };
+        }
+        return c;
+      })
+    );
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'PRODUCT_CREATED',
+      targetType: 'product',
+      targetId: product.id,
+      details: `${product.title} (${formatCurrencyINR(product.pricePaise)})`,
+    });
+  };
+
+  const handleUpdateSellerProduct = (productId: string, updates: Partial<CatalogProductWithMeta>) => {
+    setCatalogProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, ...updates } : p))
+    );
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'PRODUCT_UPDATED',
+      targetType: 'product',
+      targetId: productId,
+      details: `Updated fields: ${Object.keys(updates).join(', ')}`,
+    });
+  };
+
+  const handleDeleteSellerProduct = (productId: string) => {
+    const removed = catalogProducts.find((p) => p.id === productId);
+    setCatalogProducts((prev) => prev.filter((p) => p.id !== productId));
+    if (removed) {
+      setManagedCategories((prev) =>
+        prev.map((c) => {
+          if (c.slug === 'all' || c.slug === removed.categorySlug) {
+            return { ...c, itemCount: Math.max(0, c.itemCount - 1) };
+          }
+          return c;
+        })
+      );
+    }
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'PRODUCT_DELETED',
+      targetType: 'product',
+      targetId: productId,
+      details: removed ? `Deleted ${removed.title}` : `Deleted ${productId}`,
+    });
+  };
+
+  const handleUpdateOrderStage = (orderId: string, nextStage: OrderStage) => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      orders: prev.orders.map((o) =>
+        o.id === orderId ? { ...o, trackingStage: nextStage, status: nextStage } : o
+      ),
+    }));
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'ORDER_STAGE_UPDATED',
+      targetType: 'order',
+      targetId: orderId,
+      details: `Fulfillment transitioned to ${nextStage}`,
+    });
+  };
+
+  const handleUpdateBulkInquiryStatus = (
+    inquiryId: string,
+    status: BulkOrderInquiry['status']
+  ) => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      bulkInquiries: (prev.bulkInquiries || []).map((inq) =>
+        inq.id === inquiryId ? { ...inq, status } : inq
+      ),
+    }));
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: currentUser.role,
+      action: 'BULK_INQUIRY_UPDATED',
+      targetType: 'inquiry',
+      targetId: inquiryId,
+      details: `Bulk quote status set to ${status}`,
+    });
+  };
+
+  const handleOnboardSeller = (seller: SellerProfile) => {
+    setSellers((prev) => [seller, ...prev]);
+    appendLocalAudit({
+      actorEmail: seller.email,
+      actorRole: 'seller',
+      action: 'SELLER_ONBOARD_APPLIED',
+      targetType: 'seller',
+      targetId: seller.id,
+      details: `${seller.storeName} (GSTIN: ${seller.gstin})`,
+    });
+  };
+
+  const handleUpdateSellerGovernance = (
+    sellerId: string,
+    updates: Partial<Pick<SellerProfile, 'status' | 'commissionRate' | 'isVerified'>>
+  ) => {
+    setSellers((prev) =>
+      prev.map((s) => (s.id === sellerId ? { ...s, ...updates } : s))
+    );
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: 'admin',
+      action: 'SELLER_GOVERNANCE_UPDATED',
+      targetType: 'seller',
+      targetId: sellerId,
+      details: JSON.stringify(updates),
+    });
+  };
+
+  const handleToggleProductVisibility = (productId: string, isPublished: boolean) => {
+    setCatalogProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, isPublished } : p))
+    );
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: 'admin',
+      action: isPublished ? 'PRODUCT_PUBLISHED' : 'PRODUCT_HIDDEN',
+      targetType: 'product',
+      targetId: productId,
+      details: `Catalog visibility set to ${isPublished}`,
+    });
+  };
+
+  const handleCreateCategory = (cat: ManagedCategory) => {
+    setManagedCategories((prev) => {
+      if (prev.some((c) => c.slug === cat.slug)) return prev;
+      return [...prev, cat];
+    });
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: 'admin',
+      action: 'CATEGORY_CREATED',
+      targetType: 'category',
+      targetId: cat.slug,
+      details: `${cat.name} (HSN ${cat.hsnDefault})`,
+    });
+  };
+
+  const handleUpsertCoupon = (coupon: PromoDiscount) => {
+    setCoupons((prev) => {
+      const idx = prev.findIndex((c) => c.code.toUpperCase() === coupon.code.toUpperCase());
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = coupon;
+        return next;
+      }
+      return [coupon, ...prev];
+    });
+    appendLocalAudit({
+      actorEmail: currentUser.email,
+      actorRole: 'admin',
+      action: 'COUPON_UPSERTED',
+      targetType: 'coupon',
+      targetId: coupon.code,
+      details: `${coupon.type} ${coupon.value} (${coupon.isActive !== false ? 'active' : 'paused'})`,
+    });
+  };
+
   const handleMoveAllToCart = (products: CatalogProduct[]) => {
     products.forEach((p) => {
       handleQuickAdd(p);
@@ -693,8 +1227,8 @@ export default function App() {
   };
 
   const recentlyViewedProducts = recentlyViewedIds
-    .map((id) => PRODUCTS_CATALOG.find((p) => p.id === id))
-    .filter((p): p is CatalogProduct => Boolean(p));
+    .map((id) => catalogProducts.find((p) => p.id === id))
+    .filter((p): p is CatalogProductWithMeta => Boolean(p));
 
   const handleOpenUserAccountTab = (tab: 'profile' | 'addresses' | 'orders' | 'login' | 'register' = 'profile') => {
     setUserAccountTab(tab);
@@ -731,16 +1265,20 @@ export default function App() {
         onSearchSubmit={handleSearchSubmit}
         onOpenCommandCenter={() => setViewMode('command-center')}
         onOpenUserAccount={(tab) => handleOpenUserAccountTab(tab || 'profile')}
+        onOpenSellerPortal={() => setIsSellerPortalOpen(true)}
+        onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
         onOpenNovaAssistant={() => setIsNovaOpen(true)}
         onQuickFilter={handleQuickFilter}
       />
 
       {/* VIEWPORT SWITCHER: Storefront vs 4-Agent Command Center */}
       {viewMode === 'command-center' ? (
-        <CommandCenter
-          onBackToStore={() => setViewMode('storefront')}
-          currentUser={currentUser}
-        />
+        <Suspense fallback={<div className="p-12 text-center text-xs text-slate-500">Loading NEXORA Command Center...</div>}>
+          <CommandCenter
+            onBackToStore={() => setViewMode('storefront')}
+            currentUser={currentUser}
+          />
+        </Suspense>
       ) : (
         <>
           {/* 2. HERO SECTION COMPONENT */}
@@ -760,6 +1298,8 @@ export default function App() {
 
             {/* 4. EXPANDED DISCOVERY & CATALOG SECTION */}
             <FeaturedGrid
+              products={catalogProducts}
+              categories={categoryItemsForGrid}
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
               searchFilter={searchFilter}
@@ -783,6 +1323,8 @@ export default function App() {
             onNotifyToast={showToast}
             onSelectCategory={handleCategorySelect}
             onOpenUserAccount={(tab) => handleOpenUserAccountTab(tab || 'profile')}
+            onOpenSellerPortal={() => setIsSellerPortalOpen(true)}
+            onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
           />
         </>
       )}
@@ -798,6 +1340,7 @@ export default function App() {
         appliedPromo={appliedPromo}
         onApplyPromo={(promo) => setAppliedPromo(promo)}
         onRemovePromo={() => setAppliedPromo(null)}
+        availablePromos={couponMap}
       />
 
       {/* 7. SLIDE-OVER WISHLIST DRAWER */}
@@ -805,17 +1348,15 @@ export default function App() {
         isOpen={isWishlistOpen}
         onClose={() => setIsWishlistOpen(false)}
         wishlistedIds={wishlistedIds}
+        products={catalogProducts}
         onRemoveWishlist={handleToggleWishlist}
         onAddToCart={handleQuickAdd}
         onMoveAllToCart={handleMoveAllToCart}
         onQuickView={handleOpenQuickView}
-        onClearWishlist={() => {
-          setWishlistedIds(new Set());
-          showToast('Wishlist cleared');
-        }}
+        onClearWishlist={handleClearWishlist}
       />
 
-      {/* 8. RAZORPAY SECURE PAYMENT GATEWAY MODAL */}
+      {/* 8. RAZORPAY SANDBOX PAYMENT GATEWAY MODAL */}
       <RazorpayModal
         isOpen={isRazorpayOpen}
         onClose={() => setIsRazorpayOpen(false)}
@@ -850,6 +1391,7 @@ export default function App() {
         onClose={() => setIsUserAccountOpen(false)}
         currentUser={currentUser}
         onUpdateUser={setCurrentUser}
+        onCancelOrder={handleCancelOrder}
         initialTab={userAccountTab}
         onOpenWishlist={() => {
           setIsUserAccountOpen(false);
@@ -858,6 +1400,14 @@ export default function App() {
         onOpenCommandCenter={() => {
           setIsUserAccountOpen(false);
           setViewMode('command-center');
+        }}
+        onOpenSellerPortal={() => {
+          setIsUserAccountOpen(false);
+          setIsSellerPortalOpen(true);
+        }}
+        onOpenAdminPortal={() => {
+          setIsUserAccountOpen(false);
+          setIsAdminPortalOpen(true);
         }}
       />
 
@@ -904,6 +1454,51 @@ export default function App() {
         onSaveAlert={handleSavePriceAlert}
         onSimulatePriceDrop={handleSimulatePriceDrop}
       />
+
+      {/* 15. SELLER CENTRAL PORTAL */}
+      <Suspense fallback={null}>
+        <SellerDashboardModal
+          isOpen={isSellerPortalOpen}
+          onClose={() => setIsSellerPortalOpen(false)}
+          user={currentUser}
+          sellers={sellers}
+          products={catalogProducts}
+          categories={managedCategories}
+          orders={currentUser.orders}
+          bulkInquiries={currentUser.bulkInquiries || []}
+          onCreateProduct={handleCreateSellerProduct}
+          onUpdateProduct={handleUpdateSellerProduct}
+          onDeleteProduct={handleDeleteSellerProduct}
+          onUpdateOrderStage={handleUpdateOrderStage}
+          onUpdateBulkInquiryStatus={handleUpdateBulkInquiryStatus}
+          onOnboardSeller={handleOnboardSeller}
+          onNotifyToast={showToast}
+          getAuthHeaders={getAuthHeaders}
+        />
+      </Suspense>
+
+      {/* 16. PLATFORM ADMIN GOVERNANCE PORTAL */}
+      <Suspense fallback={null}>
+        <AdminDashboardModal
+          isOpen={isAdminPortalOpen}
+          onClose={() => setIsAdminPortalOpen(false)}
+          user={currentUser}
+          sellers={sellers}
+          products={catalogProducts}
+          categories={managedCategories}
+          orders={currentUser.orders}
+          coupons={coupons}
+          auditLogs={auditLogs}
+          onUpdateSellerGovernance={handleUpdateSellerGovernance}
+          onToggleProductVisibility={handleToggleProductVisibility}
+          onCreateCategory={handleCreateCategory}
+          onUpsertCoupon={handleUpsertCoupon}
+          onUpdateOrderStage={handleUpdateOrderStage}
+          onOpenCommandCenter={() => setViewMode('command-center')}
+          onNotifyToast={showToast}
+          getAuthHeaders={getAuthHeaders}
+        />
+      </Suspense>
     </div>
   );
 }

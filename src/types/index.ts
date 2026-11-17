@@ -95,12 +95,19 @@ export interface UserOrder {
     pricePaise: number;
     quantity: number;
   }>;
+  deliveryAddress?: UserAddress;
   preferredDeliveryDate?: string;
   orderNotes?: string;
   isGiftReceipt?: boolean;
   giftMessage?: string;
   checkpoints?: TrackingCheckpoint[];
   returnInfo?: OrderReturnInfo;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  promoCode?: string;
+  discountPaise?: number;
+  gstPaise?: number;
+  paymentMode?: 'live' | 'sandbox-demo';
 }
 
 export interface BulkOrderInquiry {
@@ -167,6 +174,49 @@ export interface PromoDiscount {
   value: number; // percentage (e.g. 10 for 10%) or paise (e.g. 50000 for ₹500)
   minSpendPaise?: number;
   description: string;
+  isActive?: boolean;
+  usageCount?: number;
+}
+
+export interface SellerProfile {
+  id: string;
+  storeName: string;
+  ownerName: string;
+  gstin: string;
+  email: string;
+  city: string;
+  state: string;
+  isVerified: boolean;
+  status: 'pending' | 'approved' | 'suspended';
+  commissionRate: number;
+  balancePaise: number;
+  createdAt?: string;
+}
+
+export interface ManagedCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  hsnDefault: string;
+  gstRate: number;
+  itemCount: number;
+}
+
+export interface AdminAuditLog {
+  id: string;
+  actorEmail: string;
+  actorRole: 'admin' | 'seller' | 'customer' | 'system';
+  action: string;
+  targetType: 'seller' | 'product' | 'order' | 'category' | 'coupon' | 'inquiry' | 'user' | 'orchestrator';
+  targetId: string;
+  details: string;
+  timestamp: string;
+}
+
+export interface CatalogProductWithMeta extends CatalogProduct {
+  hsnCode?: string;
+  isPublished?: boolean;
 }
 
 export interface UserProfile {

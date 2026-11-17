@@ -21,6 +21,7 @@ interface CartDrawerProps {
   appliedPromo?: PromoDiscount | null;
   onApplyPromo?: (promo: PromoDiscount) => void;
   onRemovePromo?: () => void;
+  availablePromos?: Record<string, PromoDiscount>;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -33,6 +34,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   appliedPromo = null,
   onApplyPromo,
   onRemovePromo,
+  availablePromos,
 }) => {
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     const code = (codeToApply || promoInput).trim();
     if (!code) return;
 
-    const result = validatePromoCode(code, subtotalPaise);
+    const result = validatePromoCode(code, subtotalPaise, availablePromos);
     if (!result.valid || !result.promo) {
       setPromoError(result.message || 'Invalid coupon code');
       setPromoSuccess(null);

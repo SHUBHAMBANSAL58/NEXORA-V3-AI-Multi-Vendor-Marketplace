@@ -21,6 +21,13 @@ import {
   buildProductFaqSchema,
   calculateCategoryProductCounts,
   applyOrderWalletAndPoints,
+  validateIndianPinCode,
+  validateGstin,
+  getProductHsnCode,
+  getIndianStateCode,
+  canCancelOrder,
+  canTransitionOrderStage,
+  calculateAuthoritativeOrderPricing,
 } from './commerceFeatures.js';
 import { CatalogProduct, UserReview, UserOrder, UserProfile } from '../types/index.js';
 
@@ -527,6 +534,50 @@ test('applyOrderWalletAndPoints applies single wallet deduction and deducts rede
   assert.equal(highTierRes.nextPoints, 1600);
   assert.equal(highTierRes.nextTier, 'Platinum');
 });
+
+test('validateIndianPinCode and validateGstin enforce Indian statutory formats', () => {
+  assert.equal(validateIndianPinCode('110001').valid, true);
+  assert.equal(validateIndianPinCode('010001').valid, false);
+  assert.equal(validateIndianPinCode('11001').valid, false);
+
+  assert.equal(validateGstin('29aaacl1234f1z8').valid, true);
+  assert.equal(validateGstin('INVALIDGSTIN123').valid, false);
+});
+
+test('getProductHsnCode and getIndianStateCode map Indian GST metadata dynamically', () => {
+  assert.equal(getProductHsnCode('smartphones'), '85171300');
+  assert.equal(getProductHsnCode('audio'), '85183000');
+  assert.equal(getProductHsnCode('keyboards'), '84716040');
+  assert.equal(getProductHsnCode('timepieces'), '91021100');
+
+  assert.equal(getIndianStateCode('Karnataka'), 'Karnataka (29)');
+  assert.equal(getIndianStateCode('Maharashtra'), 'Maharashtra (27)');
+  assert.equal(getIndianStateCode(''), 'Delhi (07)');
+});
+
+test('canCancelOrder and canTransitionOrderStage enforce order lifecycle rules', () => {
+  assert.equal(canCancelOrder({ status: 'Processing', trackingStage: 'Processing' }), true);
+  assert.equal(canCancelOrder({ status: 'Delivered', trackingStage: 'Delivered' }), false);
+  assert.equal(canCancelOrder({ status: 'Cancelled', trackingStage: 'Processing' }), false);
+
+  assert.equal(canTransitionOrderStage('Processing', 'Dispatched'), true);
+  assert.equal(canTransitionOrderStage('Dispatched', 'Processing'), false);
+  assert.equal(canTransitionOrderStage('Delivered', 'Return Requested'), true);
+});
+
+test('calculateAuthoritativeOrderPricing computes server-side INR totals and 18% inclusive GST', () => {
+  const pricing = calculateAuthoritativeOrderPricing(
+    [{ unitPricePaise: 2499900, quantity: 1 }],
+    'NEXORA10'
+  );
+  assert.equal(pricing.subtotalPaise, 2499900);
+  assert.equal(pricing.discountPaise, 249990);
+  assert.equal(pricing.shippingPaise, 0);
+  assert.equal(pricing.totalPaise, 2249910);
+  assert.equal(pricing.appliedPromoCode, 'NEXORA10');
+  assert.ok(pricing.gstPaise > 0);
+});
+
 
 
 

@@ -28,6 +28,8 @@ import {
   canCancelOrder,
   canTransitionOrderStage,
   calculateAuthoritativeOrderPricing,
+  TRACKING_TIMELINE_STEPS,
+  buildTrackingTimelineStepper,
 } from './commerceFeatures.js';
 import { CatalogProduct, UserReview, UserOrder, UserProfile } from '../types/index.js';
 
@@ -576,6 +578,72 @@ test('calculateAuthoritativeOrderPricing computes server-side INR totals and 18%
   assert.equal(pricing.totalPaise, 2249910);
   assert.equal(pricing.appliedPromoCode, 'NEXORA10');
   assert.ok(pricing.gstPaise > 0);
+});
+
+test('buildTrackingTimelineStepper maps all 5 steps (Placed -> Packed -> Shipped -> Out for Delivery -> Delivered) and Cancelled', () => {
+  assert.deepEqual([...TRACKING_TIMELINE_STEPS], [
+    'Placed',
+    'Packed',
+    'Shipped',
+    'Out for Delivery',
+    'Delivered',
+  ]);
+
+  const placed = buildTrackingTimelineStepper({
+    status: 'Confirmed',
+    trackingStage: '' as any,
+    date: '12 Nov 2026',
+  });
+  assert.equal(placed.activeStepIndex, 0);
+  assert.equal(placed.activeStepLabel, 'Placed');
+  assert.equal(placed.steps[0].state, 'current');
+  assert.equal(placed.steps[1].state, 'upcoming');
+
+  const packed = buildTrackingTimelineStepper({
+    status: 'Processing',
+    trackingStage: 'Processing',
+    date: '12 Nov 2026',
+  });
+  assert.equal(packed.activeStepIndex, 1);
+  assert.equal(packed.activeStepLabel, 'Packed');
+  assert.equal(packed.steps[0].state, 'completed');
+  assert.equal(packed.steps[1].state, 'current');
+
+  const shipped = buildTrackingTimelineStepper({
+    status: 'Processing',
+    trackingStage: 'Dispatched',
+    date: '12 Nov 2026',
+  });
+  assert.equal(shipped.activeStepIndex, 2);
+  assert.equal(shipped.activeStepLabel, 'Shipped');
+  assert.equal(shipped.railPercent, 50);
+
+  const outForDelivery = buildTrackingTimelineStepper({
+    status: 'Out for Delivery',
+    trackingStage: 'Out for Delivery',
+    date: '12 Nov 2026',
+  });
+  assert.equal(outForDelivery.activeStepIndex, 3);
+  assert.equal(outForDelivery.activeStepLabel, 'Out for Delivery');
+
+  const delivered = buildTrackingTimelineStepper({
+    status: 'Delivered',
+    trackingStage: 'Delivered',
+    date: '12 Nov 2026',
+  });
+  assert.equal(delivered.activeStepIndex, 4);
+  assert.equal(delivered.isDelivered, true);
+  assert.equal(delivered.steps.every((s) => s.state === 'completed'), true);
+
+  const cancelled = buildTrackingTimelineStepper({
+    status: 'Cancelled',
+    trackingStage: 'Processing',
+    date: '12 Nov 2026',
+  });
+  assert.equal(cancelled.isCancelled, true);
+  assert.equal(cancelled.activeStepLabel, 'Cancelled');
+  assert.equal(cancelled.progressPercent, 0);
+  assert.equal(cancelled.steps.every((s) => s.state === 'cancelled'), true);
 });
 
 

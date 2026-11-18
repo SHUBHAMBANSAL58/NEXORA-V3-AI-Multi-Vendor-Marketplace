@@ -96,8 +96,35 @@ export const SafeImage: React.FC<SafeImageProps> = ({
     );
   }
 
+  const tokens = className.trim().split(/\s+/).filter(Boolean);
+  const wrapperTokens: string[] = [];
+  const imgTokens: string[] = [];
+  const wrapperPattern =
+    /^(?:w-|h-|min-w-|max-w-|min-h-|max-h-|shrink|grow|flex-|rounded|border|bg-|aspect-|shadow)/;
+
+  for (const tok of tokens) {
+    const base = tok.split(':').pop() || tok;
+    if (wrapperPattern.test(base)) {
+      wrapperTokens.push(tok);
+    } else {
+      imgTokens.push(tok);
+    }
+  }
+
+  const hasWidth = wrapperTokens.some((t) => /^(?:w-|min-w-)/.test(t.split(':').pop() || t));
+  const hasHeight = wrapperTokens.some((t) => /^(?:h-|min-h-)/.test(t.split(':').pop() || t));
+  const wrapperClass = [
+    'relative overflow-hidden',
+    hasWidth ? '' : 'w-full',
+    hasHeight ? '' : 'h-full',
+    ...wrapperTokens,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const imgClass = ['w-full h-full', ...imgTokens].filter(Boolean).join(' ');
+
   return (
-    <div className="relative w-full h-full">
+    <div className={wrapperClass}>
       {showSkeleton && status === 'loading' && (
         <div
           aria-hidden="true"
@@ -125,7 +152,7 @@ export const SafeImage: React.FC<SafeImageProps> = ({
           handleFallbackAdvance();
           onError?.(e);
         }}
-        className={`${className} transition-opacity duration-300 ${
+        className={`${imgClass} transition-opacity duration-300 ${
           status === 'loaded' ? 'opacity-100' : 'opacity-0'
         }`}
         {...rest}

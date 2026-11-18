@@ -45,7 +45,10 @@ import {
   canCancelOrder,
   validateIndianPinCode,
 } from '../utils/commerceFeatures.js';
-import { exportOrderHistoryToPdf } from '../utils/pdfInvoiceExporter.js';
+import {
+  exportOrderHistoryToPdf,
+  exportSingleOrderInvoicePdf,
+} from '../utils/pdfInvoiceExporter.js';
 import { OrderTrackerModal } from './OrderTrackerModal.js';
 import { OrderReturnModal } from './OrderReturnModal.js';
 import { GSTInvoiceModal } from './GSTInvoiceModal.js';
@@ -476,10 +479,19 @@ export const UserAccount: React.FC<UserAccountProps> = ({
   const handleAdvanceStage = (orderId: string) => {
     const STAGES: OrderStage[] = ['Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
     const updatedOrders = currentUser.orders.map((o) => {
-      if (o.id !== orderId) return o;
-      const current = o.trackingStage || (o.status as OrderStage) || 'Processing';
-      const idx = STAGES.indexOf(current);
-      const nextStage = idx < STAGES.length - 1 ? STAGES[idx + 1] : 'Delivered';
+      if (o.id !== orderId || o.status === 'Cancelled' || o.status === 'Return Requested' || o.status === 'Returned') {
+        return o;
+      }
+      const rawStage = o.status === 'Confirmed' && o.trackingStage !== 'Dispatched' && o.trackingStage !== 'Out for Delivery' && o.trackingStage !== 'Delivered'
+        ? 'Confirmed'
+        : (o.status === 'Shipped' ? 'Dispatched' : o.trackingStage || (o.status as OrderStage) || 'Processing');
+      let nextStage: OrderStage = 'Delivered';
+      if (rawStage === 'Confirmed') {
+        nextStage = 'Processing';
+      } else {
+        const idx = STAGES.indexOf(rawStage as OrderStage);
+        nextStage = idx >= 0 && idx < STAGES.length - 1 ? STAGES[idx + 1] : 'Delivered';
+      }
       const checkpoints = generateTrackingTimeline(nextStage, o.date);
       return {
         ...o,
@@ -492,9 +504,23 @@ export const UserAccount: React.FC<UserAccountProps> = ({
     const updatedUser = { ...currentUser, orders: updatedOrders };
     onUpdateUser(updatedUser);
     const updatedTarget = updatedOrders.find((o) => o.id === orderId) || null;
-    setTrackingOrder(updatedTarget);
+    setTrackingOrder((prev) => (prev && prev.id === orderId ? updatedTarget : prev));
     setAuthSuccessMsg(`Order ${orderId} logistics progression updated to: ${updatedTarget?.trackingStage}`);
     setTimeout(() => setAuthSuccessMsg(null), 3000);
+  };
+
+  const handleDownloadSingleOrderInvoice = (order: UserOrder) => {
+    try {
+      const result = exportSingleOrderInvoicePdf(currentUser, order);
+      setShareSuccessToast(
+        `Downloaded GST Invoice (${result.filename}) with HSN & GST breakdown`
+      );
+      setTimeout(() => setShareSuccessToast(null), 3500);
+    } catch (err) {
+      console.error('Failed to generate single order PDF invoice:', err);
+      setShareSuccessToast('Unable to download PDF invoice right now.');
+      setTimeout(() => setShareSuccessToast(null), 3000);
+    }
   };
 
   // Submit Return Request Handler
@@ -1664,10 +1690,9 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                   ) : (
                     <div className="space-y-3">
                       {currentUser.orders.map((order) => {
-                        const STAGES: OrderStage[] = ['Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
                         const currentStage: OrderStage = order.trackingStage || (order.status as OrderStage) || 'Processing';
-                        const stageIdx = STAGES.indexOf(currentStage);
-                        const isDelivered = currentStage === 'Delivered';
+                        const isCancelled = order.status === 'Cancelled';
+                        const isDelivered = !isCancelled && (currentStage === 'Delivered' || order.status === 'Delivered');
                         const isReturnRequested = order.status === 'Return Requested';
 
                         return (
@@ -1687,7 +1712,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                               <div className="flex items-center gap-2">
                                 <span
                                   className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                    isReturnRequested
+                                    isCancelled || isReturnRequested
                                       ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400'
                                       : isDelivered
                                       ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400'
@@ -1726,6 +1751,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                     src={item.image}
                                     alt={item.title}
                                     fallbackLabel={item.title}
+                                    compactFallback
                                     className="w-12 h-12 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0"
                                   />
                                   <div className="flex-1 min-w-0">
@@ -1859,7 +1885,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                   <span>Track Live</span>
                                 </button>
 
-                                {/* Download Tax Invoice */}
+                                {/* View GST Invoice Preview */}
                                 <button
                                   type="button"
                                   onClick={() => setInvoiceOrder(order)}
@@ -1867,6 +1893,19 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 >
                                   <FileText className="w-3.5 h-3.5" />
                                   <span>GST Invoice</span>
+                                </button>
+
+                                {/* Direct Download Invoice PDF (with HSN Codes & GST Breakdown) */}
+                                <button
+                                  type="button"
+                                  data-testid={`download-invoice-btn-${order.id}`}
+                                  aria-label={`Download PDF invoice for order ${order.id}`}
+                                  onClick={() => handleDownloadSingleOrderInvoice(order)}
+                                  className="font-semibold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200 dark:border-cyan-800 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                                  title="Download GST Tax Invoice PDF with HSN codes and CGST/SGST breakdown"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span>Download Invoice</span>
                                 </button>
 
                                 {/* Cancel Pre-Dispatch Order */}

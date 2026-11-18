@@ -5,7 +5,7 @@ import { formatCurrencyINR } from '../utils/formatters.js';
 import { getIndianStateCode, getProductHsnCode } from '../utils/commerceFeatures.js';
 import { PRODUCTS_CATALOG } from '../data/productsCatalog.js';
 
-import { exportOrderHistoryToPdf } from '../utils/pdfInvoiceExporter.js';
+import { exportSingleOrderInvoicePdf } from '../utils/pdfInvoiceExporter.js';
 
 interface GSTInvoiceModalProps {
   isOpen: boolean;
@@ -52,11 +52,7 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
   };
 
   const handleDownloadPdf = () => {
-    exportOrderHistoryToPdf(
-      user,
-      [{ ...order, isGiftReceipt: isMasked }],
-      `NEXORA-Invoice-${order.id}.pdf`
-    );
+    exportSingleOrderInvoicePdf(user, order, { isGiftReceipt: isMasked });
   };
 
   return (

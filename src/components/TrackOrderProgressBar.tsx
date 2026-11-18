@@ -9,11 +9,15 @@ import {
   ChevronUp,
   FastForward,
   ExternalLink,
-  ShieldCheck,
-  AlertCircle,
+  ShoppingBag,
+  XCircle,
 } from 'lucide-react';
 import { UserOrder, OrderStage, TrackingCheckpoint } from '../types/index.js';
-import { generateTrackingTimeline, getOrderProgressPercent } from '../utils/commerceFeatures.js';
+import {
+  buildTrackingTimelineStepper,
+  generateTrackingTimeline,
+  TrackingTimelineStepName,
+} from '../utils/commerceFeatures.js';
 
 interface TrackOrderProgressBarProps {
   order: UserOrder;
@@ -21,32 +25,13 @@ interface TrackOrderProgressBarProps {
   onOpenDetailedTracker?: (order: UserOrder) => void;
 }
 
-const STAGES: { stage: OrderStage; label: string; sublabel: string; icon: React.FC<{ className?: string }> }[] = [
-  {
-    stage: 'Processing',
-    label: 'Processing',
-    sublabel: 'Packed & Verified',
-    icon: Package,
-  },
-  {
-    stage: 'Dispatched',
-    label: 'Dispatched',
-    sublabel: 'Carrier In Transit',
-    icon: Truck,
-  },
-  {
-    stage: 'Out for Delivery',
-    label: 'Out for Delivery',
-    sublabel: 'Last-Mile Courier',
-    icon: MapPin,
-  },
-  {
-    stage: 'Delivered',
-    label: 'Delivered',
-    sublabel: 'OTP Verified',
-    icon: CheckCircle2,
-  },
-];
+const STEP_ICONS: Record<TrackingTimelineStepName, React.FC<{ className?: string }>> = {
+  Placed: ShoppingBag,
+  Packed: Package,
+  Shipped: Truck,
+  'Out for Delivery': MapPin,
+  Delivered: CheckCircle2,
+};
 
 export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
   order,
@@ -55,12 +40,8 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
 }) => {
   const [showCheckpoints, setShowCheckpoints] = useState(false);
 
+  const timeline = buildTrackingTimelineStepper(order);
   const currentStage: OrderStage = order.trackingStage || (order.status as OrderStage) || 'Processing';
-  const stageIndex = STAGES.findIndex((s) => s.stage === currentStage);
-  const isDelivered = currentStage === 'Delivered';
-  const isReturnRequested = order.status === 'Return Requested';
-
-  const progressPercent = getOrderProgressPercent(currentStage);
 
   // Generate or read checkpoints
   const checkpoints: TrackingCheckpoint[] =
@@ -69,70 +50,116 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
       : generateTrackingTimeline(currentStage, order.date);
 
   return (
-    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs space-y-3.5 transition-all">
+    <div
+      data-testid={`tracking-timeline-${order.id}`}
+      className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs space-y-3.5 transition-all"
+    >
       {/* 1. STATUS HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="relative flex items-center justify-center">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                isDelivered ? 'bg-emerald-500' : 'bg-cyan-500 animate-ping'
-              }`}
-            />
-            <span
-              className={`absolute w-2 h-2 rounded-full ${
-                isDelivered ? 'bg-emerald-500' : 'bg-cyan-500'
-              }`}
-            />
+            {timeline.isCancelled ? (
+              <XCircle className="w-4 h-4 text-rose-500" />
+            ) : (
+              <>
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    timeline.isDelivered ? 'bg-emerald-500' : 'bg-cyan-500 animate-ping'
+                  }`}
+                />
+                <span
+                  className={`absolute w-2 h-2 rounded-full ${
+                    timeline.isDelivered ? 'bg-emerald-500' : 'bg-cyan-500'
+                  }`}
+                />
+              </>
+            )}
           </div>
           <div>
             <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white text-xs">
-              <span>Track Order:</span>
-              <span className="text-cyan-600 dark:text-cyan-400 font-bold">{currentStage}</span>
+              <span>Tracking Timeline:</span>
+              <span
+                className={`font-bold ${
+                  timeline.isCancelled
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : timeline.isDelivered
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-cyan-600 dark:text-cyan-400'
+                }`}
+              >
+                {timeline.activeStepLabel}
+              </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {order.courierPartner || 'BlueDart Express'} · AWB: <span className="font-mono">{order.trackingNumber || 'BLD-993201'}</span>
+              {order.courierPartner || 'BlueDart Express'} · AWB:{' '}
+              <span className="font-mono">{order.trackingNumber || 'BLD-993201'}</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-[11px] self-start sm:self-center">
           <span className="text-slate-500 dark:text-slate-400">
-            {isDelivered ? 'Delivered on time' : 'Estimated Delivery:'}
+            {timeline.isCancelled
+              ? 'Status:'
+              : timeline.isDelivered
+              ? 'Delivered on time'
+              : 'Estimated Delivery:'}
           </span>
-          <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-200/60 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-            {order.estimatedDeliveryDate || 'Tomorrow by 8:00 PM'}
+          <span
+            className={`font-bold px-2 py-0.5 rounded-md ${
+              timeline.isCancelled
+                ? 'text-rose-700 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-950/60'
+                : 'text-slate-800 dark:text-slate-200 bg-slate-200/60 dark:bg-slate-800'
+            }`}
+          >
+            {timeline.isCancelled
+              ? order.cancellationReason || 'Cancelled before dispatch'
+              : order.estimatedDeliveryDate || 'Tomorrow by 8:00 PM'}
           </span>
         </div>
       </div>
 
-      {/* 2. VISUAL PROGRESS BAR & 4 STAGE NODES */}
+      {/* 2. DYNAMIC 5-STEP TRACKING TIMELINE STEPPER (Placed -> Packed -> Shipped -> Out for Delivery -> Delivered) */}
       <div className="pt-2 pb-1">
         <div className="relative">
           {/* Background rail */}
-          <div className="absolute left-6 right-6 top-4 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 -z-0" />
+          <div className="absolute left-[10%] right-[10%] top-4 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 -z-0" />
 
           {/* Animated gradient progress fill */}
-          <div
-            className="absolute left-6 top-4 h-1.5 rounded-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 shadow-xs shadow-cyan-500/50 transition-all duration-700 ease-out -z-0"
-            style={{ width: `calc(${progressPercent}% - 3rem)` }}
-          />
+          {!timeline.isCancelled && (
+            <div
+              className="absolute left-[10%] top-4 h-1.5 rounded-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 shadow-xs shadow-cyan-500/50 transition-all duration-700 ease-out -z-0"
+              style={{ width: `calc(${timeline.railPercent * 0.8}%)` }}
+            />
+          )}
 
-          {/* 4 Stage Nodes */}
-          <div className="relative z-10 flex items-start justify-between">
-            {STAGES.map((stg, idx) => {
-              const isPast = idx < stageIndex;
-              const isCurrent = idx === stageIndex;
-              const isCompleted = isPast || (isCurrent && isDelivered);
-              const Icon = stg.icon;
+          {/* 5 Step Nodes */}
+          <div
+            role="list"
+            aria-label="Tracking Timeline"
+            className="relative z-10 grid grid-cols-5 gap-1"
+          >
+            {timeline.steps.map((step) => {
+              const Icon = STEP_ICONS[step.key];
+              const isCompleted = step.state === 'completed';
+              const isCurrent = step.state === 'current';
+              const isCancelledStep = step.state === 'cancelled';
 
               return (
-                <div key={stg.stage} className="flex flex-col items-center flex-1 text-center">
+                <div
+                  key={step.key}
+                  role="listitem"
+                  aria-current={isCurrent ? 'step' : undefined}
+                  data-step-state={step.state}
+                  className="flex flex-col items-center text-center min-w-0"
+                >
                   {/* Node Icon */}
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                      isCurrent && !isDelivered
-                        ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-500/30 shadow-md font-bold scale-110'
+                      isCancelledStep
+                        ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-300/80 dark:border-rose-800 text-rose-500'
+                        : isCurrent
+                        ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-500/30 shadow-md font-bold scale-105'
                         : isCompleted
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-400'
@@ -141,22 +168,24 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
                     <Icon className="w-4 h-4" />
                   </div>
 
-                  {/* Stage Label */}
+                  {/* Step Label */}
                   <span
-                    className={`text-[11px] font-bold mt-2 leading-tight ${
-                      isCurrent
+                    className={`text-[10px] sm:text-[11px] font-bold mt-2 leading-tight px-0.5 ${
+                      isCancelledStep
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : isCurrent
                         ? 'text-cyan-600 dark:text-cyan-400'
                         : isCompleted
                         ? 'text-slate-800 dark:text-slate-200'
                         : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
-                    {stg.label}
+                    {step.label}
                   </span>
 
                   {/* Sub-label */}
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:block mt-0.5">
-                    {stg.sublabel}
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:block mt-0.5 truncate max-w-full">
+                    {step.sublabel}
                   </span>
                 </div>
               );
@@ -181,14 +210,16 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
           ) : (
             <>
               <ChevronDown className="w-3.5 h-3.5" />
-              <span>View Real-Time Milestones ({checkpoints.filter((c) => c.completed).length}/{checkpoints.length})</span>
+              <span>
+                View Real-Time Milestones ({checkpoints.filter((c) => c.completed).length}/{checkpoints.length})
+              </span>
             </>
           )}
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Stage advance simulation button for interactive testing */}
-          {onAdvanceStage && !isDelivered && (
+          {/* Stage advance simulation button for active non-cancelled orders */}
+          {onAdvanceStage && !timeline.isDelivered && !timeline.isCancelled && (
             <button
               type="button"
               onClick={() => onAdvanceStage(order.id)}

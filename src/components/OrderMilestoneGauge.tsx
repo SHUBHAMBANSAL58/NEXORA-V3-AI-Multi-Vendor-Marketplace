@@ -65,9 +65,10 @@ export const OrderMilestoneGauge: React.FC<OrderMilestoneGaugeProps> = ({
   const [selectedMilestone, setSelectedMilestone] = useState<number | null>(null);
 
   // Normalize current stage percentage
+  const isCancelled = order.status === 'Cancelled';
   const currentStage = order.trackingStage || (order.status as OrderStage) || 'Processing';
-  const stageIndex = MILESTONE_STAGES.findIndex((m) => m.stage === currentStage);
-  const activePercentage = stageIndex >= 0 ? MILESTONE_STAGES[stageIndex].percentage : 25;
+  const stageIndex = isCancelled ? -1 : MILESTONE_STAGES.findIndex((m) => m.stage === currentStage);
+  const activePercentage = isCancelled ? 0 : stageIndex >= 0 ? MILESTONE_STAGES[stageIndex].percentage : 25;
 
   const width = 340;
   const height = 230;
@@ -246,7 +247,7 @@ export const OrderMilestoneGauge: React.FC<OrderMilestoneGaugeProps> = ({
           <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
             {activePercentage}% Completed
           </span>
-          {onAdvanceStage && stageIndex < MILESTONE_STAGES.length - 1 && (
+          {onAdvanceStage && !isCancelled && stageIndex < MILESTONE_STAGES.length - 1 && (
             <button
               type="button"
               onClick={() => onAdvanceStage(order.id)}

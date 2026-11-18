@@ -183,6 +183,145 @@ export function generateTrackingTimeline(
   return checkpoints;
 }
 
+export const TRACKING_TIMELINE_STEPS = [
+  'Placed',
+  'Packed',
+  'Shipped',
+  'Out for Delivery',
+  'Delivered',
+] as const;
+
+export type TrackingTimelineStepName = (typeof TRACKING_TIMELINE_STEPS)[number];
+
+export interface TrackingTimelineStepItem {
+  key: TrackingTimelineStepName;
+  label: TrackingTimelineStepName;
+  sublabel: string;
+  state: 'completed' | 'current' | 'upcoming' | 'cancelled';
+  timestamp: string;
+}
+
+export interface TrackingTimelineSummary {
+  steps: TrackingTimelineStepItem[];
+  activeStepIndex: number;
+  activeStepLabel: TrackingTimelineStepName | 'Cancelled';
+  progressPercent: number;
+  railPercent: number;
+  isCancelled: boolean;
+  isDelivered: boolean;
+  isReturnFlow: boolean;
+}
+
+const STEP_SUBLABELS: Record<TrackingTimelineStepName, string> = {
+  Placed: 'Order Confirmed',
+  Packed: 'QA & Sealed',
+  Shipped: 'Carrier Transit',
+  'Out for Delivery': 'Last-Mile Courier',
+  Delivered: 'OTP Verified',
+};
+
+/**
+ * Maps any UserOrder status / trackingStage to a dynamic 5-step Tracking Timeline
+ * covering Placed -> Packed -> Shipped -> Out for Delivery -> Delivered (plus Cancelled).
+ */
+export function buildTrackingTimelineStepper(
+  order: Pick<UserOrder, 'status' | 'trackingStage' | 'date'>
+): TrackingTimelineSummary {
+  const statusStr = (order.status || '').trim();
+  const stageStr = (order.trackingStage || '').trim();
+  const orderDate = order.date || 'Today';
+
+  if (statusStr === 'Cancelled') {
+    return {
+      steps: TRACKING_TIMELINE_STEPS.map((key) => ({
+        key,
+        label: key,
+        sublabel: STEP_SUBLABELS[key],
+        state: 'cancelled',
+        timestamp: key === 'Placed' ? `${orderDate}` : 'Cancelled',
+      })),
+      activeStepIndex: -1,
+      activeStepLabel: 'Cancelled',
+      progressPercent: 0,
+      railPercent: 0,
+      isCancelled: true,
+      isDelivered: false,
+      isReturnFlow: false,
+    };
+  }
+
+  const isReturnFlow =
+    statusStr === 'Return Requested' ||
+    statusStr === 'Returned' ||
+    stageStr === 'Return Requested' ||
+    stageStr === 'Returned';
+
+  // Determine the furthest active step index (0..4) across both status & trackingStage
+  let activeStepIndex = 1; // Default to Packed ('Processing')
+  if (
+    isReturnFlow ||
+    stageStr === 'Delivered' ||
+    statusStr === 'Delivered'
+  ) {
+    activeStepIndex = 4;
+  } else if (stageStr === 'Out for Delivery' || statusStr === 'Out for Delivery') {
+    activeStepIndex = 3;
+  } else if (
+    stageStr === 'Dispatched' ||
+    statusStr === 'Dispatched' ||
+    statusStr === 'Shipped'
+  ) {
+    activeStepIndex = 2;
+  } else if (statusStr === 'Confirmed' && (!stageStr || stageStr === 'Processing')) {
+    activeStepIndex = statusStr === 'Confirmed' && stageStr !== 'Processing' ? 0 : stageStr === 'Processing' ? 1 : 0;
+  } else if (stageStr === 'Processing' || statusStr === 'Processing') {
+    activeStepIndex = 1;
+  }
+
+  const isDelivered = activeStepIndex === 4;
+  const activeStepLabel = TRACKING_TIMELINE_STEPS[activeStepIndex];
+
+  const steps: TrackingTimelineStepItem[] = TRACKING_TIMELINE_STEPS.map((key, idx) => {
+    const state: TrackingTimelineStepItem['state'] = isDelivered
+      ? 'completed'
+      : idx < activeStepIndex
+      ? 'completed'
+      : idx === activeStepIndex
+      ? 'current'
+      : 'upcoming';
+
+    const timestamp =
+      state === 'upcoming'
+        ? 'Pending'
+        : idx === 0
+        ? orderDate
+        : state === 'completed' || state === 'current'
+        ? idx === activeStepIndex && !isDelivered
+          ? 'In Progress'
+          : 'Completed'
+        : 'Pending';
+
+    return {
+      key,
+      label: key,
+      sublabel: STEP_SUBLABELS[key],
+      state,
+      timestamp,
+    };
+  });
+
+  return {
+    steps,
+    activeStepIndex,
+    activeStepLabel,
+    progressPercent: (activeStepIndex + 1) * 20,
+    railPercent: Math.round((activeStepIndex / (TRACKING_TIMELINE_STEPS.length - 1)) * 100),
+    isCancelled: false,
+    isDelivered,
+    isReturnFlow,
+  };
+}
+
 /**
  * Computes average rating and star distribution breakdown
  */

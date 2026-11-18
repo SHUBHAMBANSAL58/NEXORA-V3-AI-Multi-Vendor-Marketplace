@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { UserOrder, UserProfile, OrderStage } from '../types/index.js';
 import { formatCurrencyINR } from '../utils/formatters.js';
-import { generateTrackingTimeline } from '../utils/commerceFeatures.js';
+import { buildTrackingTimelineStepper, generateTrackingTimeline } from '../utils/commerceFeatures.js';
 
 interface OrderTrackerModalProps {
   isOpen: boolean;
@@ -23,7 +23,12 @@ interface OrderTrackerModalProps {
   onAdvanceStage: (orderId: string) => void;
 }
 
-const STAGES: OrderStage[] = ['Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
+const STAGE_ADVANCE_LABEL: Record<string, string> = {
+  Placed: 'Packed',
+  Packed: 'Shipped',
+  Shipped: 'Out for Delivery',
+  'Out for Delivery': 'Delivered',
+};
 
 export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   isOpen,
@@ -43,9 +48,10 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
 
   if (!isOpen || !order) return null;
 
+  const timeline = buildTrackingTimelineStepper(order);
   const currentStage: OrderStage = order.trackingStage || (order.status as OrderStage) || 'Processing';
-  const stageIndex = STAGES.indexOf(currentStage);
-  const isFinalDelivered = currentStage === 'Delivered';
+  const isFinalDelivered = timeline.isDelivered;
+  const nextStepLabel = STAGE_ADVANCE_LABEL[timeline.activeStepLabel] || 'Delivered';
 
   const deliveryAddr =
     order.deliveryAddress ||
@@ -107,39 +113,50 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* 1. VISUAL PROGRESSION STEPPER (4 STAGES) */}
+          {/* 1. VISUAL PROGRESSION STEPPER (5 STEPS) */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Logistics Progression
+                Tracking Timeline
               </span>
-              <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
-                <span>Live Stage: {currentStage}</span>
+              <span
+                className={`text-xs font-bold flex items-center gap-1.5 ${
+                  timeline.isCancelled
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : 'text-cyan-600 dark:text-cyan-400'
+                }`}
+              >
+                {!timeline.isCancelled && (
+                  <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
+                )}
+                <span>Live Stage: {timeline.activeStepLabel}</span>
               </span>
             </div>
 
-            {/* Stepper bar */}
-            <div className="relative flex items-center justify-between">
+            {/* 5-Step Stepper bar */}
+            <div className="relative grid grid-cols-5 gap-1">
               {/* Background Line */}
-              <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 dark:bg-slate-800 -z-0" />
+              <div className="absolute left-[10%] right-[10%] top-4 h-1 bg-slate-200 dark:bg-slate-800 -z-0" />
               {/* Active Fill Line */}
-              <div
-                className="absolute left-6 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-500 -z-0"
-                style={{
-                  width: `${(Math.max(0, stageIndex) / (STAGES.length - 1)) * 88}%`,
-                }}
-              />
+              {!timeline.isCancelled && (
+                <div
+                  className="absolute left-[10%] top-4 h-1 bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-500 -z-0"
+                  style={{ width: `${timeline.railPercent * 0.8}%` }}
+                />
+              )}
 
-              {STAGES.map((stage, idx) => {
-                const isCompleted = idx <= stageIndex;
-                const isCurrent = idx === stageIndex;
+              {timeline.steps.map((step, idx) => {
+                const isCompleted = step.state === 'completed';
+                const isCurrent = step.state === 'current';
+                const isCancelledStep = step.state === 'cancelled';
 
                 return (
-                  <div key={stage} className="relative z-10 flex flex-col items-center">
+                  <div key={step.key} className="relative z-10 flex flex-col items-center">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                        isCurrent
+                        isCancelledStep
+                          ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-300 text-rose-500'
+                          : isCurrent
                           ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-500/20 shadow-md font-bold'
                           : isCompleted
                           ? 'bg-emerald-600 text-white shadow-xs'
@@ -153,15 +170,17 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                       )}
                     </div>
                     <span
-                      className={`text-[11px] font-semibold mt-2 text-center max-w-[80px] leading-tight ${
-                        isCurrent
+                      className={`text-[11px] font-semibold mt-2 text-center leading-tight ${
+                        isCancelledStep
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : isCurrent
                           ? 'text-cyan-600 dark:text-cyan-400 font-bold'
                           : isCompleted
                           ? 'text-slate-900 dark:text-white'
                           : 'text-slate-400'
                       }`}
                     >
-                      {stage}
+                      {step.label}
                     </span>
                   </div>
                 );
@@ -239,14 +258,18 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
             <span>Simulated logistics telemetry · NEXORA Express Gateway</span>
           </div>
 
-          {!isFinalDelivered ? (
+          {timeline.isCancelled ? (
+            <span className="font-semibold text-rose-600 dark:text-rose-400">
+              Order Cancelled
+            </span>
+          ) : !isFinalDelivered ? (
             <button
               type="button"
               onClick={() => onAdvanceStage(order.id)}
               className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Simulate Next Stage ({STAGES[stageIndex + 1]})</span>
+              <span>Simulate Next Stage ({nextStepLabel})</span>
             </button>
           ) : (
             <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">

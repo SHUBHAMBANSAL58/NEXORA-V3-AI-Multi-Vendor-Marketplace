@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildPdfOrderHistoryDocumentData,
   formatPdfCurrencyINR,
+  resolveOrderItemHsnCode,
 } from './pdfInvoiceExporter';
 import { UserProfile } from '../types/index';
 
@@ -79,7 +80,15 @@ test('formatPdfCurrencyINR produces ASCII-safe Indian currency string', () => {
   assert.equal(formatPdfCurrencyINR(0), 'Rs. 0.00');
 });
 
-test('buildPdfOrderHistoryDocumentData computes GST breakup and preserves payment metadata', () => {
+test('resolveOrderItemHsnCode resolves catalog and category HSN codes accurately', () => {
+  assert.equal(resolveOrderItemHsnCode({ title: 'Sennheiser Momentum 4 Wireless Flagship' }), '85183000');
+  assert.equal(resolveOrderItemHsnCode({ title: 'Aeris 75% Gasket Mechanical Keyboard' }), '84716040');
+  assert.equal(resolveOrderItemHsnCode({ title: 'Titanium Pro Flagship Smartphone 256GB' }), '85171300');
+  assert.equal(resolveOrderItemHsnCode({ title: 'Gift Bundle Mechanical Keyboard' }), '84716040');
+  assert.equal(resolveOrderItemHsnCode({ title: 'Custom Audio DAC', hsnCode: '85198100' }), '85198100');
+});
+
+test('buildPdfOrderHistoryDocumentData computes per-item HSN and GST breakup cleanly', () => {
   const data = buildPdfOrderHistoryDocumentData(MOCK_USER, MOCK_USER.orders, new Date('2026-11-14T10:00:00Z'));
   assert.equal(data.customerName, 'Shubham Bansal');
   assert.equal(data.totalOrders, 2);
@@ -92,13 +101,25 @@ test('buildPdfOrderHistoryDocumentData computes GST breakup and preserves paymen
   assert.equal(firstOrder.invoiceNumber, 'INV-2026-9932');
   assert.equal(firstOrder.paymentMethod, 'UPI (Razorpay Verified)');
   assert.equal(firstOrder.totalFormatted, 'Rs. 34,999.00');
+  assert.equal(firstOrder.placeOfSupply, 'Delhi (07)');
 
-  // Gift receipt order masks line totals & payment details cleanly
+  // Per-item HSN & GST breakdown
+  const item = firstOrder.items[0];
+  assert.equal(item.hsnCode, '85183000');
+  assert.equal(item.gstRateLabel, '18%');
+  assert.equal(item.taxableFormatted, 'Rs. 29,660.17');
+  assert.equal(item.cgstFormatted, 'Rs. 2,669.42');
+  assert.equal(item.sgstFormatted, 'Rs. 2,669.41');
+  assert.equal(item.gstFormatted, 'Rs. 5,338.83');
+
+  // Gift receipt order masks line totals & payment details cleanly while keeping HSN
   const giftOrder = data.orders[1];
   assert.equal(giftOrder.isGiftReceipt, true);
   assert.equal(giftOrder.totalFormatted, '[GIFT MASKED]');
   assert.equal(giftOrder.paymentMethod, 'Prepaid (Gift Masked)');
+  assert.equal(giftOrder.items[0].hsnCode, '84716040');
   assert.equal(giftOrder.items[0].lineTotalFormatted, '[MASKED]');
+  assert.equal(giftOrder.items[0].gstFormatted, '[MASKED]');
 });
 
 test('buildPdfOrderHistoryDocumentData handles empty orders gracefully', () => {

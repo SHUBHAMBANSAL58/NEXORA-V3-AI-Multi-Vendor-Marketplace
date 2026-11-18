@@ -1,11 +1,22 @@
 import { jsPDF } from 'jspdf';
 import { UserOrder, UserProfile } from '../types/index.js';
-import { calculatePurchaseHistorySummary } from './commerceFeatures.js';
+import {
+  calculatePurchaseHistorySummary,
+  getIndianStateCode,
+  getProductHsnCode,
+} from './commerceFeatures.js';
+import { PRODUCTS_CATALOG } from '../data/productsCatalog.js';
 
 export interface NormalizedPdfOrderItem {
   title: string;
+  hsnCode: string;
+  gstRateLabel: string;
   quantity: number;
   unitPriceFormatted: string;
+  taxableFormatted: string;
+  cgstFormatted: string;
+  sgstFormatted: string;
+  gstFormatted: string;
   lineTotalFormatted: string;
 }
 
@@ -18,10 +29,12 @@ export interface NormalizedPdfOrder {
   courierPartner: string;
   trackingNumber: string;
   paymentMethod: string;
+  placeOfSupply: string;
   isGiftReceipt: boolean;
   taxableFormatted: string;
   cgstFormatted: string;
   sgstFormatted: string;
+  gstFormatted: string;
   totalFormatted: string;
   items: NormalizedPdfOrderItem[];
 }
@@ -32,6 +45,7 @@ export interface PdfOrderHistoryDocumentData {
   customerEmail: string;
   customerPhone: string;
   billingAddressLine: string;
+  gstin: string;
   totalOrders: number;
   totalItems: number;
   totalSpentPaise: number;
@@ -41,6 +55,52 @@ export interface PdfOrderHistoryDocumentData {
   totalTaxableFormatted: string;
   totalGstFormatted: string;
   orders: NormalizedPdfOrder[];
+}
+
+/**
+ * Resolves the Indian HSN code for a purchased line item using catalog metadata and category keyword fallback.
+ */
+export function resolveOrderItemHsnCode(item: {
+  title: string;
+  hsnCode?: string;
+}): string {
+  if (item.hsnCode && /^[0-9]{4,8}$/.test(item.hsnCode.trim())) {
+    return item.hsnCode.trim();
+  }
+
+  const normalizedTitle = (item.title || '').trim().toLowerCase();
+  const exactMatch = PRODUCTS_CATALOG.find(
+    (p) => p.title.trim().toLowerCase() === normalizedTitle
+  );
+  if (exactMatch) {
+    return getProductHsnCode(exactMatch.categorySlug);
+  }
+
+  const partialMatch = PRODUCTS_CATALOG.find(
+    (p) =>
+      normalizedTitle.includes(p.title.trim().toLowerCase()) ||
+      p.title.trim().toLowerCase().includes(normalizedTitle)
+  );
+  if (partialMatch) {
+    return getProductHsnCode(partialMatch.categorySlug);
+  }
+
+  if (/keyboard|keycap|mouse|trackpad|switch/.test(normalizedTitle)) {
+    return getProductHsnCode('keyboards');
+  }
+  if (/phone|smartphone|tablet|ipad|mobile|5g|camera|drone|vr/.test(normalizedTitle)) {
+    return getProductHsnCode('smartphones');
+  }
+  if (/watch|chronograph|timepiece|wearable/.test(normalizedTitle)) {
+    return getProductHsnCode('timepieces');
+  }
+  if (/desk|chair|lightbar|stand|lamp|monitor|shelf|pad/.test(normalizedTitle)) {
+    return getProductHsnCode('workspace');
+  }
+  if (/charger|gan|adapter|cable|hub|dock|powerbank/.test(normalizedTitle)) {
+    return getProductHsnCode('accessories');
+  }
+  return getProductHsnCode('audio');
 }
 
 /**
@@ -81,6 +141,7 @@ export function buildPdfOrderHistoryDocumentData(
     const gstPaise = Math.max(0, totalPaise - taxablePaise);
     const cgstPaise = Math.round(gstPaise / 2);
     const sgstPaise = gstPaise - cgstPaise;
+    const supplyAddr = order.deliveryAddress || defaultAddr;
 
     return {
       id: order.id,
@@ -91,19 +152,33 @@ export function buildPdfOrderHistoryDocumentData(
       courierPartner: order.courierPartner || 'BlueDart Express',
       trackingNumber: order.trackingNumber || 'BLD-PENDING',
       paymentMethod: isMasked ? 'Prepaid (Gift Masked)' : order.paymentMethod,
+      placeOfSupply: getIndianStateCode(supplyAddr?.state),
       isGiftReceipt: isMasked,
       taxableFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(taxablePaise),
       cgstFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(cgstPaise),
       sgstFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(sgstPaise),
+      gstFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(gstPaise),
       totalFormatted: isMasked ? '[GIFT MASKED]' : formatPdfCurrencyINR(totalPaise),
-      items: order.items.map((item) => ({
-        title: item.title,
-        quantity: item.quantity,
-        unitPriceFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(item.pricePaise),
-        lineTotalFormatted: isMasked
-          ? '[MASKED]'
-          : formatPdfCurrencyINR(item.pricePaise * item.quantity),
-      })),
+      items: order.items.map((item) => {
+        const lineTotalPaise = Math.max(0, item.pricePaise * item.quantity);
+        const itemTaxablePaise = Math.round(lineTotalPaise / 1.18);
+        const itemGstPaise = Math.max(0, lineTotalPaise - itemTaxablePaise);
+        const itemCgstPaise = Math.round(itemGstPaise / 2);
+        const itemSgstPaise = itemGstPaise - itemCgstPaise;
+
+        return {
+          title: item.title,
+          hsnCode: resolveOrderItemHsnCode(item),
+          gstRateLabel: isMasked ? '-' : '18%',
+          quantity: item.quantity,
+          unitPriceFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(item.pricePaise),
+          taxableFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(itemTaxablePaise),
+          cgstFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(itemCgstPaise),
+          sgstFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(itemSgstPaise),
+          gstFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(itemGstPaise),
+          lineTotalFormatted: isMasked ? '[MASKED]' : formatPdfCurrencyINR(lineTotalPaise),
+        };
+      }),
     };
   });
 
@@ -117,6 +192,7 @@ export function buildPdfOrderHistoryDocumentData(
     customerEmail: user.email,
     customerPhone: defaultAddr?.phone || user.phone || '+91 98765 43210',
     billingAddressLine,
+    gstin: '07AABCN8942K1Z9',
     totalOrders: summary.orderCount,
     totalItems: summary.totalItemsPurchased,
     totalSpentPaise: summary.totalSpentPaise,
@@ -130,7 +206,7 @@ export function buildPdfOrderHistoryDocumentData(
 }
 
 /**
- * Generates and downloads a multi-page GST-compliant PDF invoice statement for the user's order history.
+ * Generates and downloads a single or multi-page GST-compliant PDF tax invoice with HSN codes & GST breakup.
  */
 export function exportOrderHistoryToPdf(
   user: UserProfile,
@@ -138,6 +214,7 @@ export function exportOrderHistoryToPdf(
   customFilename?: string
 ): { filename: string; orderCount: number; pageCount: number } {
   const data = buildPdfOrderHistoryDocumentData(user, orders);
+  const isSingleOrder = data.orders.length === 1;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -163,8 +240,14 @@ export function exportOrderHistoryToPdf(
   doc.setTextColor(226, 232, 240);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  doc.text('NEXORA HyperCommerce India Pvt Ltd · GSTIN: 07AABCN8942K1Z9', margin + 5, y + 15);
-  doc.text('Tax Invoice & Consolidated Order History Statement', margin + 5, y + 20);
+  doc.text(`NEXORA HyperCommerce India Pvt Ltd · GSTIN: ${data.gstin}`, margin + 5, y + 15);
+  doc.text(
+    isSingleOrder
+      ? `Tax Invoice / Bill of Supply (${data.orders[0].invoiceNumber})`
+      : 'Tax Invoice & Consolidated Order History Statement',
+    margin + 5,
+    y + 20
+  );
 
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
@@ -193,14 +276,14 @@ export function exportOrderHistoryToPdf(
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.text('CONSOLIDATED PAYMENT SUMMARY', pageWidth - margin - 4, y + 6, { align: 'right' });
+  doc.text(isSingleOrder ? 'TAX INVOICE GST SUMMARY' : 'CONSOLIDATED PAYMENT SUMMARY', pageWidth - margin - 4, y + 6, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.text(`Taxable Value: ${data.totalTaxableFormatted}`, pageWidth - margin - 4, y + 11, { align: 'right' });
   doc.text(`Total GST (18%): ${data.totalGstFormatted}`, pageWidth - margin - 4, y + 16, { align: 'right' });
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(8, 145, 178);
-  doc.text(`Grand Total Spent: ${data.totalSpentFormatted}`, pageWidth - margin - 4, y + 21, { align: 'right' });
+  doc.text(`Grand Total Paid: ${data.totalSpentFormatted}`, pageWidth - margin - 4, y + 21, { align: 'right' });
   y += 30;
 
   if (data.orders.length === 0) {
@@ -210,13 +293,13 @@ export function exportOrderHistoryToPdf(
     doc.text('No orders recorded for this account yet.', margin, y + 8);
   } else {
     data.orders.forEach((order, index) => {
-      const estimatedHeight = 28 + order.items.length * 6;
+      const estimatedHeight = 32 + order.items.length * 10;
       ensureSpace(estimatedHeight);
 
       // Order header strip
       doc.setFillColor(241, 245, 249);
       doc.setDrawColor(203, 213, 225);
-      doc.roundedRect(margin, y, contentWidth, 12, 1.5, 1.5, 'FD');
+      doc.roundedRect(margin, y, contentWidth, 13, 1.5, 1.5, 'FD');
 
       doc.setTextColor(15, 23, 42);
       doc.setFont('helvetica', 'bold');
@@ -224,45 +307,61 @@ export function exportOrderHistoryToPdf(
       doc.text(`${index + 1}. ${order.invoiceNumber} (${order.id})`, margin + 3, y + 5);
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(7.8);
       doc.setTextColor(71, 85, 105);
       doc.text(
-        `Date: ${order.date} | Stage: ${order.trackingStage} | Courier: ${order.courierPartner} (${order.trackingNumber})`,
+        `Date: ${order.date} | Status: ${order.status} | Courier: ${order.courierPartner} (${order.trackingNumber})`,
         margin + 3,
-        y + 9.5
+        y + 10
       );
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(15, 23, 42);
       doc.text(order.totalFormatted, pageWidth - margin - 3, y + 6, { align: 'right' });
-      y += 14;
+      y += 15;
 
-      // Payment line
+      // Payment & GST breakup summary line
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(7.8);
       doc.setTextColor(51, 65, 85);
       doc.text(
-        `Payment: ${order.paymentMethod}   |   Taxable: ${order.taxableFormatted}   |   CGST (9%): ${order.cgstFormatted}   |   SGST (9%): ${order.sgstFormatted}`,
+        `Payment: ${order.paymentMethod} | Supply: ${order.placeOfSupply}`,
         margin + 3,
         y + 3
       );
-      y += 6;
+      y += 4.5;
+      doc.text(
+        `Order Tax Summary -> Taxable: ${order.taxableFormatted} | CGST (9%): ${order.cgstFormatted} | SGST (9%): ${order.sgstFormatted} | Total GST: ${order.gstFormatted}`,
+        margin + 3,
+        y + 3
+      );
+      y += 6.5;
 
-      // Item lines
+      // Item-level lines with HSN code and per-item GST breakdown
       order.items.forEach((item) => {
-        ensureSpace(7);
-        doc.setFont('helvetica', 'normal');
+        ensureSpace(11);
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
-        doc.setTextColor(30, 41, 59);
+        doc.setTextColor(15, 23, 42);
         const titleTruncated =
-          item.title.length > 62 ? `${item.title.slice(0, 59)}...` : item.title;
-        doc.text(`- ${titleTruncated}  (x${item.quantity})`, margin + 5, y + 3);
+          item.title.length > 52 ? `${item.title.slice(0, 49)}...` : item.title;
+        doc.text(`• ${titleTruncated}  [HSN: ${item.hsnCode}]  (Qty ${item.quantity})`, margin + 4, y + 3);
         doc.text(
-          `${item.unitPriceFormatted}  ->  ${item.lineTotalFormatted}`,
+          `${item.unitPriceFormatted} -> ${item.lineTotalFormatted}`,
           pageWidth - margin - 3,
           y + 3,
           { align: 'right' }
+        );
+        y += 4.5;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.3);
+        doc.setTextColor(71, 85, 105);
+        doc.text(
+          `   GST (${item.gstRateLabel}): Taxable ${item.taxableFormatted} | CGST 9%: ${item.cgstFormatted} | SGST 9%: ${item.sgstFormatted} | Tax Total: ${item.gstFormatted}`,
+          margin + 4,
+          y + 2.8
         );
         y += 5.5;
       });
@@ -281,7 +380,7 @@ export function exportOrderHistoryToPdf(
     doc.setFontSize(7.5);
     doc.setTextColor(100, 116, 139);
     doc.text(
-      'Computer-generated GST Tax Invoice Statement · Digitally Signed by NEXORA HyperCommerce India Pvt Ltd (#NX-DS-94021)',
+      'Computer-generated GST Tax Invoice · Digitally Signed by NEXORA HyperCommerce India Pvt Ltd (#NX-DS-94021)',
       margin,
       pageHeight - 8
     );
@@ -291,7 +390,11 @@ export function exportOrderHistoryToPdf(
   }
 
   const slugDate = new Date().toISOString().slice(0, 10);
-  const filename = customFilename || `NEXORA-Order-History-Invoice-${slugDate}.pdf`;
+  const filename =
+    customFilename ||
+    (isSingleOrder
+      ? `NEXORA-Invoice-${data.orders[0].id}.pdf`
+      : `NEXORA-Order-History-Invoice-${slugDate}.pdf`);
   doc.save(filename);
 
   return {
@@ -299,4 +402,24 @@ export function exportOrderHistoryToPdf(
     orderCount: data.orders.length,
     pageCount,
   };
+}
+
+/**
+ * Exports a single order's GST Tax Invoice PDF including HSN codes & CGST/SGST breakup.
+ */
+export function exportSingleOrderInvoicePdf(
+  user: UserProfile,
+  order: UserOrder,
+  options?: { isGiftReceipt?: boolean }
+): { filename: string; orderCount: number; pageCount: number } {
+  const effectiveOrder =
+    options?.isGiftReceipt !== undefined
+      ? { ...order, isGiftReceipt: options.isGiftReceipt }
+      : order;
+
+  return exportOrderHistoryToPdf(
+    user,
+    [effectiveOrder],
+    `NEXORA-Invoice-${order.id}.pdf`
+  );
 }

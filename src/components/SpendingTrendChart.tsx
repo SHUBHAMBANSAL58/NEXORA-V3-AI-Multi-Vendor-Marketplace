@@ -60,7 +60,7 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
     const gridStroke = isDark ? '#1e293b' : '#e2e8f0';
     const domainStroke = isDark ? '#334155' : '#cbd5e1';
     const xLabelFill = isDark ? '#94a3b8' : '#475569';
-    const yLabelFill = isDark ? '#64748b' : '#64748b';
+    const yLabelFill = isDark ? '#94a3b8' : '#475569';
     const areaFadeStop = isDark ? '#090d16' : '#f8fafc';
 
     svg.attr('viewBox', `0 0 ${width} ${height}`).attr('class', 'w-full h-auto overflow-visible');
@@ -326,7 +326,7 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               </span>
             </h3>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Historical transaction velocity and category spend analysis for{' '}
             <strong className="text-slate-800 dark:text-slate-200">{userName}</strong>.
           </p>
@@ -341,7 +341,7 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                 activeMetric === 'spend'
                   ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               Amount (₹)
@@ -352,7 +352,7 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                 activeMetric === 'orders'
                   ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               Order Count
@@ -365,8 +365,8 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               onClick={() => setChartType('area')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                 chartType === 'area'
-                  ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
               title="Curved Area Flow"
               aria-label="Curved Area Flow"
@@ -378,8 +378,8 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               onClick={() => setChartType('bar')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                 chartType === 'bar'
-                  ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
               title="Geometric Bar Chart"
               aria-label="Geometric Bar Chart"
@@ -393,57 +393,57 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
       {/* KPI Tiles */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800/90 bg-slate-50 dark:bg-slate-900/50 space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>Total Expenditure</span>
-            <CreditCard className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <CreditCard className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400" />
           </span>
           <p className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white">
             {formatCurrencyINR(totalSpendPaise)}
           </p>
-          <p className="text-[11px] text-slate-500 font-mono">
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
             Across {totalOrders} verified orders
           </p>
         </div>
 
         <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800/90 bg-slate-50 dark:bg-slate-900/50 space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>Monthly Average</span>
-            <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <Calendar className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" />
           </span>
           <p className="text-xl sm:text-2xl font-black font-mono text-cyan-700 dark:text-cyan-300">
             {formatCurrencyINR(averageMonthlyPaise)}
           </p>
-          <p className="text-[11px] text-slate-500 font-mono">Active buying cadence</p>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">Active buying cadence</p>
         </div>
 
         <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800/90 bg-slate-50 dark:bg-slate-900/50 space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>Peak Spending Month</span>
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <Sparkles className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400" />
           </span>
           <p className="text-xl sm:text-2xl font-black font-mono text-indigo-700 dark:text-indigo-300">
             {peakMonth ? peakMonth.label : 'N/A'}
           </p>
-          <p className="text-[11px] text-slate-500 font-mono">
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
             {peakMonth ? formatCurrencyINR(peakMonth.totalPaise) : '0'}
           </p>
         </div>
 
         <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800/90 bg-slate-50 dark:bg-slate-900/50 space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>MoM Growth</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
           </span>
           <p
             className={`text-xl sm:text-2xl font-black font-mono ${
               monthOverMonthGrowth >= 0
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-rose-600 dark:text-rose-400'
+                ? 'text-emerald-700 dark:text-emerald-400'
+                : 'text-rose-700 dark:text-rose-400'
             }`}
           >
             {monthOverMonthGrowth > 0 ? `+${monthOverMonthGrowth}%` : `${monthOverMonthGrowth}%`}
           </p>
-          <p className="text-[11px] text-slate-500 font-mono">vs Previous active month</p>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">vs Previous active month</p>
         </div>
       </div>
 
@@ -465,9 +465,9 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               top: `${Math.max(tooltipPos.y - 85, 10)}px`,
             }}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-1 text-slate-500 dark:text-slate-400 font-semibold">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-1 text-slate-600 dark:text-slate-400 font-semibold">
               <span>{hoveredPoint.label}</span>
-              <span className="text-[10px] text-cyan-600 dark:text-cyan-400">
+              <span className="text-[10px] text-cyan-700 dark:text-cyan-400">
                 {totalSpendPaise > 0
                   ? `${Math.round((hoveredPoint.totalPaise / totalSpendPaise) * 100)}% share`
                   : ''}
@@ -477,7 +477,7 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
               <p className="text-slate-900 dark:text-white font-bold text-sm">
                 {formatCurrencyINR(hoveredPoint.totalPaise)}
               </p>
-              <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+              <p className="text-slate-600 dark:text-slate-400 text-[11px]">
                 {hoveredPoint.orderCount} {hoveredPoint.orderCount === 1 ? 'order' : 'orders'} ·{' '}
                 {hoveredPoint.itemsCount} items
               </p>
@@ -487,7 +487,7 @@ export const SpendingTrendChart: React.FC<SpendingTrendChartProps> = ({
       </div>
 
       {/* Footer Info & Telemetry Note */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 font-mono border-t border-slate-200 dark:border-slate-800/60 pt-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400 font-mono border-t border-slate-200 dark:border-slate-800/60 pt-3">
         <div className="flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-500 shrink-0" />
           <span>Calculated deterministically from user order timeline (inclusive of 18% GST).</span>

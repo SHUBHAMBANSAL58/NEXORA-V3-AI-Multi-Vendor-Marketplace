@@ -81,16 +81,16 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
               <span
                 className={`font-bold ${
                   timeline.isCancelled
-                    ? 'text-rose-600 dark:text-rose-400'
+                    ? 'text-rose-700 dark:text-rose-400'
                     : timeline.isDelivered
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-cyan-600 dark:text-cyan-400'
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-cyan-700 dark:text-cyan-400'
                 }`}
               >
                 {timeline.activeStepLabel}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
               {order.courierPartner || 'BlueDart Express'} · AWB:{' '}
               <span className="font-mono">{order.trackingNumber || 'BLD-993201'}</span>
             </p>
@@ -98,7 +98,7 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
         </div>
 
         <div className="flex items-center gap-2 text-[11px] self-start sm:self-center">
-          <span className="text-slate-500 dark:text-slate-400">
+          <span className="text-slate-600 dark:text-slate-400">
             {timeline.isCancelled
               ? 'Status:'
               : timeline.isDelivered
@@ -162,7 +162,7 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
                         ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-500/30 shadow-md font-bold scale-105'
                         : isCompleted
                         ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-400'
+                        : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -172,19 +172,19 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
                   <span
                     className={`text-[10px] sm:text-[11px] font-bold mt-2 leading-tight px-0.5 ${
                       isCancelledStep
-                        ? 'text-rose-600 dark:text-rose-400'
+                        ? 'text-rose-700 dark:text-rose-400'
                         : isCurrent
-                        ? 'text-cyan-600 dark:text-cyan-400'
+                        ? 'text-cyan-700 dark:text-cyan-400'
                         : isCompleted
                         ? 'text-slate-800 dark:text-slate-200'
-                        : 'text-slate-400 dark:text-slate-500'
+                        : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {step.label}
                   </span>
 
                   {/* Sub-label */}
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:block mt-0.5 truncate max-w-full">
+                  <span className="text-[10px] text-slate-600 dark:text-slate-400 hidden sm:block mt-0.5 truncate max-w-full">
                     {step.sublabel}
                   </span>
                 </div>
@@ -200,7 +200,7 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
         <button
           type="button"
           onClick={() => setShowCheckpoints(!showCheckpoints)}
-          className="text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+          className="text-cyan-700 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
         >
           {showCheckpoints ? (
             <>
@@ -248,9 +248,9 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
       {/* 4. EXPANDABLE REAL-TIME MILESTONES LIST */}
       {showCheckpoints && (
         <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/60 space-y-2 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-slate-400">
+          <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-slate-600 dark:text-slate-400">
             <span>Logistics Journey Log</span>
-            <span>Live Sync: Just Now</span>
+            <span>Simulated Telemetry Sync</span>
           </div>
 
           <div className="space-y-2">
@@ -260,14 +260,14 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
                 className={`flex items-start gap-2.5 p-2 rounded-lg text-xs transition-colors ${
                   cp.completed
                     ? 'bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800'
-                    : 'bg-slate-100/40 dark:bg-slate-900/20 border border-dashed border-slate-200 dark:border-slate-800/60 opacity-60'
+                    : 'bg-slate-100/60 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800/60 opacity-85'
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${
                     cp.completed
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                   }`}
                 >
                   {cp.completed ? (
@@ -280,19 +280,19 @@ export const TrackOrderProgressBar: React.FC<TrackOrderProgressBarProps> = ({
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={`font-semibold ${
-                        cp.completed ? 'text-slate-900 dark:text-white' : 'text-slate-500'
+                        cp.completed ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {cp.stage}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                    <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 shrink-0">
                       {cp.timestamp}
                     </span>
                   </div>
-                  <p className="text-[11px] text-cyan-600 dark:text-cyan-400 font-medium truncate mt-0.5">
+                  <p className="text-[11px] text-cyan-700 dark:text-cyan-400 font-medium truncate mt-0.5">
                     📍 {cp.location}
                   </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
                     {cp.description}
                   </p>
                 </div>

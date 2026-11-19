@@ -808,10 +808,11 @@ export function buildProductFaqSchema(
  * Computes exact per-category product counts (and total under 'all') from a product catalog
  */
 export function calculateCategoryProductCounts(
-  products: Array<{ categorySlug: string }>
+  products: Array<{ categorySlug: string; isPublished?: boolean }>
 ): Record<string, number> {
-  const counts: Record<string, number> = { all: products.length };
-  for (const product of products) {
+  const published = products.filter((p) => p.isPublished !== false);
+  const counts: Record<string, number> = { all: published.length };
+  for (const product of published) {
     if (product.categorySlug) {
       counts[product.categorySlug] = (counts[product.categorySlug] || 0) + 1;
     }

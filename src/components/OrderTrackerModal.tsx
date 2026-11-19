@@ -94,7 +94,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                   {order.id}
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Courier: {order.courierPartner || 'BlueDart Express Air'} · AWB:{' '}
                 <span className="font-mono">{order.trackingNumber || 'BLD-84920481'}</span>
               </p>
@@ -105,7 +105,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dispatch tracker"
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -116,7 +116,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
           {/* 1. VISUAL PROGRESSION STEPPER (5 STEPS) */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 Tracking Timeline
               </span>
               <span
@@ -160,7 +160,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                           ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-500/20 shadow-md font-bold'
                           : isCompleted
                           ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-400'
+                          : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {isCompleted ? (
@@ -172,12 +172,12 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                     <span
                       className={`text-[11px] font-semibold mt-2 text-center leading-tight ${
                         isCancelledStep
-                          ? 'text-rose-600 dark:text-rose-400'
+                          ? 'text-rose-700 dark:text-rose-400'
                           : isCurrent
-                          ? 'text-cyan-600 dark:text-cyan-400 font-bold'
+                          ? 'text-cyan-700 dark:text-cyan-400 font-bold'
                           : isCompleted
                           ? 'text-slate-900 dark:text-white'
-                          : 'text-slate-400'
+                          : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {step.label}
@@ -194,9 +194,9 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
               <p className="font-semibold text-slate-900 dark:text-white">
                 Destination: {destinationLabel}
               </p>
-              <p className="text-slate-500 text-[11px] mt-0.5">
+              <p className="text-slate-600 dark:text-slate-400 text-[11px] mt-0.5">
                 Estimated Delivery:{' '}
-                <strong className="text-slate-700 dark:text-slate-300">
+                <strong className="text-slate-800 dark:text-slate-200">
                   {order.estimatedDeliveryDate || 'Tomorrow by 8:00 PM'}
                 </strong>
               </p>
@@ -205,14 +205,14 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
               <p className="font-mono font-bold text-slate-900 dark:text-white">
                 {formatCurrencyINR(order.totalPaise)}
               </p>
-              <p className="text-[10px] text-slate-500">{order.itemsCount} Items</p>
+              <p className="text-[10px] text-slate-600 dark:text-slate-400">{order.itemsCount} Items</p>
             </div>
           </div>
 
           {/* 3. CHECKPOINT TIMELINE */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-cyan-500" />
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400" />
               <span>Verified Courier Checkpoints</span>
             </h4>
 
@@ -233,14 +233,14 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                       <span className="font-bold text-slate-900 dark:text-white">
                         {cp.stage}
                       </span>
-                      <span className="font-mono text-[11px] text-slate-400">
+                      <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">
                         {cp.timestamp}
                       </span>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300">
+                    <p className="text-slate-700 dark:text-slate-300">
                       {cp.description}
                     </p>
-                    <div className="mt-1 flex items-center gap-1 text-[11px] text-cyan-600 dark:text-cyan-400 font-medium">
+                    <div className="mt-1 flex items-center gap-1 text-[11px] text-cyan-700 dark:text-cyan-400 font-medium">
                       <MapPin className="w-3 h-3" />
                       <span>{cp.location}</span>
                     </div>
@@ -253,8 +253,8 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
 
         {/* Modal Footer with Live Simulation Trigger */}
         <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" />
             <span>Simulated logistics telemetry · NEXORA Express Gateway</span>
           </div>
 

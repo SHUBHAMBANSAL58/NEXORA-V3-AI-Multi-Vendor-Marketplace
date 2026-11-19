@@ -48,7 +48,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base tracking-tight">Saved Wishlist</h3>
-              <p className="text-[11px] text-slate-500 font-mono">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                 {wishlistedProducts.length} items saved · {formatCurrencyINR(totalValuePaise)} total value
               </p>
             </div>
@@ -56,7 +56,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
             aria-label="Close wishlist"
           >
             <X className="w-5 h-5" />
@@ -67,11 +67,11 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
           {wishlistedProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 flex items-center justify-center text-rose-400">
+              <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 flex items-center justify-center text-rose-500 dark:text-rose-400">
                 <Heart className="w-8 h-8" />
               </div>
               <h4 className="font-bold text-slate-800 dark:text-slate-200">Your wishlist is empty</h4>
-              <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs leading-relaxed">
                 Save audio gear, mechanical keyboards, smartphones, and smart workspace items while browsing to review or purchase anytime.
               </p>
               <button
@@ -88,38 +88,43 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
               </button>
             </div>
           ) : (
-            wishlistedProducts.map((product) => (
+            wishlistedProducts.map((product) => {
+              const isSoldOut = product.stock <= 0;
+              return (
               <div
                 key={product.id}
                 className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex gap-3.5 group"
               >
                 {/* Visual Thumbnail */}
-                <div
+                <button
+                  type="button"
                   onClick={() => onQuickView(product)}
-                  className="w-20 h-20 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 cursor-pointer relative"
+                  aria-label={`Inspect ${product.title}`}
+                  className="w-20 h-20 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 cursor-pointer relative p-0"
                 >
                   <SafeImage
                     src={product.image}
+                    fallbackSrcs={product.images}
                     alt={product.title}
                     fallbackLabel={product.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded text-[9px] font-mono bg-black/70 text-white backdrop-blur-xs">
+                  <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded text-[9px] font-mono bg-black/75 text-white backdrop-blur-xs">
                     ★ {product.rating}
                   </span>
-                </div>
+                </button>
 
                 {/* Information */}
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                   <div>
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold truncate">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-700 dark:text-cyan-400 font-bold truncate">
                         {product.brand} · {product.category}
                       </span>
                       <button
                         type="button"
                         onClick={() => onRemoveWishlist(product)}
-                        className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                        className="text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1 cursor-pointer"
                         title="Remove from wishlist"
                         aria-label={`Remove ${product.title} from wishlist`}
                       >
@@ -127,19 +132,20 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                       </button>
                     </div>
 
-                    <h4
+                    <button
+                      type="button"
                       onClick={() => onQuickView(product)}
-                      className="font-medium text-xs text-slate-800 dark:text-slate-200 truncate hover:text-cyan-600 dark:hover:text-cyan-400 cursor-pointer"
+                      className="text-left w-full font-medium text-xs text-slate-900 dark:text-slate-100 truncate hover:text-cyan-700 dark:hover:text-cyan-400 cursor-pointer"
                     >
                       {product.title}
-                    </h4>
+                    </button>
 
                     <div className="flex items-baseline gap-2 mt-1">
                       <span className="font-bold text-xs font-mono text-slate-900 dark:text-white">
                         {formatCurrencyINR(product.pricePaise)}
                       </span>
                       {product.originalPricePaise && product.originalPricePaise > product.pricePaise && (
-                        <span className="text-[10px] font-mono text-slate-400 line-through">
+                        <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 line-through">
                           {formatCurrencyINR(product.originalPricePaise)}
                         </span>
                       )}
@@ -150,24 +156,31 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                   <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                     <button
                       type="button"
+                      disabled={isSoldOut}
                       onClick={() => onAddToCart(product)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-bold transition-colors cursor-pointer"
+                      className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-[11px] font-bold transition-colors ${
+                        isSoldOut
+                          ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed'
+                          : 'bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer'
+                      }`}
                     >
                       <ShoppingBag className="w-3 h-3" />
-                      <span>Add to Bag</span>
+                      <span>{isSoldOut ? 'Sold Out' : 'Add to Bag'}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onQuickView(product)}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium transition-colors cursor-pointer"
                       title="Quick View specifications"
+                      aria-label={`Quick view specifications for ${product.title}`}
                     >
                       <ExternalLink className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -176,8 +189,9 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
           <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 space-y-2.5">
             <button
               type="button"
+              disabled={wishlistedProducts.every((p) => p.stock <= 0)}
               onClick={() => onMoveAllToCart(wishlistedProducts)}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4" />
               <span>Move All ({wishlistedProducts.length}) to Shopping Bag</span>
@@ -187,13 +201,13 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
               <button
                 type="button"
                 onClick={onClearWishlist}
-                className="text-slate-500 hover:text-rose-500 transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+                className="text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
               >
                 <Trash2 className="w-3 h-3" />
                 <span>Clear All Items</span>
               </button>
 
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                 Free Pan-India Delivery
               </span>
             </div>

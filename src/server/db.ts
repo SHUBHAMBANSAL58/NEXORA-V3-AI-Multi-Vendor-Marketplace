@@ -104,20 +104,6 @@ const INITIAL_SELLERS: DBSeller[] = [
   },
   {
     id: 's-tech-2',
-    storeName: 'Kala Studio Systems Hyderabad',
-    ownerName: 'Karthik Reddy',
-    gstin: '36AABCK4812P1Z4',
-    email: 'studio@kalasystems.in',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    isVerified: true,
-    status: 'approved',
-    commissionRate: 10,
-    balancePaise: 31200000,
-    createdAt: '2026-02-04T10:00:00.000Z',
-  },
-  {
-    id: 's-tech-3',
     storeName: 'Vortex Studio Gurgaon',
     ownerName: 'Rohan Malhotra',
     gstin: '06AABCV7201L1Z9',
@@ -131,7 +117,7 @@ const INITIAL_SELLERS: DBSeller[] = [
     createdAt: '2026-02-18T10:00:00.000Z',
   },
   {
-    id: 's-tech-4',
+    id: 's-tech-3',
     storeName: 'Digital Craft Hub Mumbai',
     ownerName: 'Meera Deshmukh',
     gstin: '27AABCD3398K1Z1',
@@ -145,35 +131,21 @@ const INITIAL_SELLERS: DBSeller[] = [
     createdAt: '2026-03-01T10:00:00.000Z',
   },
   {
+    id: 's-tech-4',
+    storeName: 'Kala Studio Systems Hyderabad',
+    ownerName: 'Karthik Reddy',
+    gstin: '36AABCK4812P1Z4',
+    email: 'studio@kalasystems.in',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 31200000,
+    createdAt: '2026-02-04T10:00:00.000Z',
+  },
+  {
     id: 's-audio-1',
-    storeName: 'Acoustica Labs Mumbai',
-    ownerName: 'Siddharth Rao',
-    gstin: '27AABCA9921R1Z3',
-    email: 'labs@acoustica.in',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    isVerified: true,
-    status: 'approved',
-    commissionRate: 8,
-    balancePaise: 24500000,
-    createdAt: '2026-03-14T10:00:00.000Z',
-  },
-  {
-    id: 's-audio-2',
-    storeName: 'SoundCraft India Bangalore',
-    ownerName: 'Ananya Hegde',
-    gstin: '29AABCS5120M1Z7',
-    email: 'support@soundcraft.in',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    isVerified: true,
-    status: 'approved',
-    commissionRate: 9,
-    balancePaise: 16400000,
-    createdAt: '2026-04-02T10:00:00.000Z',
-  },
-  {
-    id: 'seller-lumina',
     storeName: 'Lumina Soundworks Studio',
     ownerName: 'Arjun Nambiar',
     gstin: '07AAACL5678M1Z2',
@@ -187,8 +159,64 @@ const INITIAL_SELLERS: DBSeller[] = [
     createdAt: '2026-01-20T10:00:00.000Z',
   },
   {
-    id: 'seller-titan',
-    storeName: 'Titan Horology Works',
+    id: 's-audio-2',
+    storeName: 'Acoustic Mastery Pune',
+    ownerName: 'Ananya Hegde',
+    gstin: '27AABCA9921R1Z3',
+    email: 'labs@acoustica.in',
+    city: 'Pune',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 9,
+    balancePaise: 24500000,
+    createdAt: '2026-03-14T10:00:00.000Z',
+  },
+  {
+    id: 's-audio-3',
+    storeName: 'Vriksh Woodcraft Mysore',
+    ownerName: 'Harsha Gowda',
+    gstin: '29AABCV3104G1Z8',
+    email: 'atelier@vrikshwood.in',
+    city: 'Mysuru',
+    state: 'Karnataka',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 9,
+    balancePaise: 14200000,
+    createdAt: '2026-03-22T10:00:00.000Z',
+  },
+  {
+    id: 's-kb-1',
+    storeName: 'KeyCraft Studio Bangalore',
+    ownerName: 'Devansh Nair',
+    gstin: '29AABCK7741M1Z2',
+    email: 'builds@keycraft.in',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 18600000,
+    createdAt: '2026-03-28T10:00:00.000Z',
+  },
+  {
+    id: 's-kb-2',
+    storeName: 'Kala Keyworks Chennai',
+    ownerName: 'Sundar Subramanian',
+    gstin: '33AABCK8820D1Z6',
+    email: 'desk@kalakeyworks.in',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 15900000,
+    createdAt: '2026-04-02T10:00:00.000Z',
+  },
+  {
+    id: 's-watch-1',
+    storeName: 'Titan Horology Works Mumbai',
     ownerName: 'Rohit Kulkarni',
     gstin: '27AABCT9012N1Z5',
     email: 'concierge@titanhorology.com',
@@ -199,6 +227,48 @@ const INITIAL_SELLERS: DBSeller[] = [
     commissionRate: 12,
     balancePaise: 92000000,
     createdAt: '2026-01-25T10:00:00.000Z',
+  },
+  {
+    id: 's-watch-2',
+    storeName: 'Kavach Horology Jaipur',
+    ownerName: 'Yuvraj Rathore',
+    gstin: '08AABCK4429E1Z1',
+    email: 'horology@kavach.in',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 11,
+    balancePaise: 26300000,
+    createdAt: '2026-02-11T10:00:00.000Z',
+  },
+  {
+    id: 's-work-1',
+    storeName: 'Kavach Leathercraft Jaipur',
+    ownerName: 'Maheshwari Singh',
+    gstin: '08AABCK9102R1Z3',
+    email: 'studio@kavachleather.in',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 17400000,
+    createdAt: '2026-04-09T10:00:00.000Z',
+  },
+  {
+    id: 's-work-2',
+    storeName: 'ErgoForm Living Pune',
+    ownerName: 'Pranav Joshi',
+    gstin: '27AABCE3190H1Z7',
+    email: 'ergonomics@ergoform.in',
+    city: 'Pune',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 22900000,
+    createdAt: '2026-04-14T10:00:00.000Z',
   },
 ];
 
@@ -676,6 +746,10 @@ export class DatabaseEngine {
     return [...this.orders];
   }
 
+  public async getOrderById(orderId: string): Promise<UserOrder | null> {
+    return this.orders.find((o) => o.id === orderId) || null;
+  }
+
   public async getOrdersForSeller(sellerId: string): Promise<UserOrder[]> {
     const sellerProductTitles = new Set(
       this.products
@@ -817,6 +891,10 @@ export class DatabaseEngine {
 
   public async getBulkInquiries(): Promise<BulkOrderInquiry[]> {
     return [...this.bulkInquiries];
+  }
+
+  public async getBulkInquiryById(id: string): Promise<BulkOrderInquiry | null> {
+    return this.bulkInquiries.find((b) => b.id === id) || null;
   }
 
   public async createBulkInquiry(inquiry: BulkOrderInquiry): Promise<BulkOrderInquiry> {

@@ -36,6 +36,7 @@ import { PRODUCTS_CATALOG, EXPANDED_CATEGORIES } from './data/productsCatalog.js
 import { formatCurrencyINR } from './utils/formatters.js';
 import {
   calculateCartTotals,
+  calculateCategoryProductCounts,
   applyOrderWalletAndPoints,
   VALID_PROMO_CODES,
   getProductHsnCode,
@@ -77,18 +78,31 @@ const INITIAL_SELLERS: SellerProfile[] = [
   {
     id: 's-tech-2',
     storeName: 'Vortex Studio Gurgaon',
-    ownerName: 'Raghav Khurana',
-    gstin: '06AABCV7890E1Z1',
+    ownerName: 'Rohan Malhotra',
+    gstin: '06AABCV7201L1Z9',
     email: 'ops@vortexstudio.in',
     city: 'Gurugram',
     state: 'Haryana',
     isVerified: true,
     status: 'approved',
-    commissionRate: 10,
+    commissionRate: 9,
     balancePaise: 27400000,
   },
   {
     id: 's-tech-3',
+    storeName: 'Digital Craft Hub Mumbai',
+    ownerName: 'Meera Deshmukh',
+    gstin: '27AABCD3398K1Z1',
+    email: 'craft@digitalhub.in',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 11,
+    balancePaise: 19800000,
+  },
+  {
+    id: 's-tech-4',
     storeName: 'Kala Studio Systems Hyderabad',
     ownerName: 'Karthik Reddy',
     gstin: '36AABCK4812P1Z4',
@@ -101,43 +115,121 @@ const INITIAL_SELLERS: SellerProfile[] = [
     balancePaise: 31200000,
   },
   {
-    id: 's-tech-4',
-    storeName: 'Digital Craft Hub Mumbai',
-    ownerName: 'Siddharth Deshmukh',
-    gstin: '27AABCD1122K1Z9',
-    email: 'care@digitalcrafthub.in',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    isVerified: true,
-    status: 'approved',
-    commissionRate: 10,
-    balancePaise: 21500000,
-  },
-  {
     id: 's-audio-1',
     storeName: 'Lumina Soundworks Studio',
-    ownerName: 'Ananya Verma',
-    gstin: '07AAACL9981M1Z2',
-    email: 'hello@luminasoundworks.in',
+    ownerName: 'Arjun Nambiar',
+    gstin: '07AAACL5678M1Z2',
+    email: 'contact@luminasound.in',
     city: 'New Delhi',
     state: 'Delhi',
     isVerified: true,
     status: 'approved',
-    commissionRate: 10,
-    balancePaise: 36800000,
+    commissionRate: 8,
+    balancePaise: 32400000,
   },
   {
     id: 's-audio-2',
-    storeName: 'Aura Acoustic Labs Pune',
-    ownerName: 'Nikhil Joshi',
-    gstin: '27AAACA5544B1Z6',
-    email: 'support@auraacoustics.in',
+    storeName: 'Acoustic Mastery Pune',
+    ownerName: 'Ananya Hegde',
+    gstin: '27AABCA9921R1Z3',
+    email: 'labs@acoustica.in',
+    city: 'Pune',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 9,
+    balancePaise: 24500000,
+  },
+  {
+    id: 's-audio-3',
+    storeName: 'Vriksh Woodcraft Mysore',
+    ownerName: 'Harsha Gowda',
+    gstin: '29AABCV3104G1Z8',
+    email: 'atelier@vrikshwood.in',
+    city: 'Mysuru',
+    state: 'Karnataka',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 9,
+    balancePaise: 14200000,
+  },
+  {
+    id: 's-kb-1',
+    storeName: 'KeyCraft Studio Bangalore',
+    ownerName: 'Devansh Nair',
+    gstin: '29AABCK7741M1Z2',
+    email: 'builds@keycraft.in',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 18600000,
+  },
+  {
+    id: 's-kb-2',
+    storeName: 'Kala Keyworks Chennai',
+    ownerName: 'Sundar Subramanian',
+    gstin: '33AABCK8820D1Z6',
+    email: 'desk@kalakeyworks.in',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 15900000,
+  },
+  {
+    id: 's-watch-1',
+    storeName: 'Titan Horology Works Mumbai',
+    ownerName: 'Rohit Kulkarni',
+    gstin: '27AABCT9012N1Z5',
+    email: 'concierge@titanhorology.com',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 12,
+    balancePaise: 92000000,
+  },
+  {
+    id: 's-watch-2',
+    storeName: 'Kavach Horology Jaipur',
+    ownerName: 'Yuvraj Rathore',
+    gstin: '08AABCK4429E1Z1',
+    email: 'horology@kavach.in',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 11,
+    balancePaise: 26300000,
+  },
+  {
+    id: 's-work-1',
+    storeName: 'Kavach Leathercraft Jaipur',
+    ownerName: 'Maheshwari Singh',
+    gstin: '08AABCK9102R1Z3',
+    email: 'studio@kavachleather.in',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    isVerified: true,
+    status: 'approved',
+    commissionRate: 10,
+    balancePaise: 17400000,
+  },
+  {
+    id: 's-work-2',
+    storeName: 'ErgoForm Living Pune',
+    ownerName: 'Pranav Joshi',
+    gstin: '27AABCE3190H1Z7',
+    email: 'ergonomics@ergoform.in',
     city: 'Pune',
     state: 'Maharashtra',
     isVerified: true,
     status: 'approved',
     commissionRate: 10,
-    balancePaise: 19600000,
+    balancePaise: 22900000,
   },
 ];
 
@@ -309,14 +401,15 @@ export default function App() {
   });
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
 
-  // Hydrate public marketplace catalog, categories, active coupons, and reviews on mount
+  // Hydrate public marketplace catalog, categories, sellers, active coupons, and reviews on mount
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [prodRes, catRes, coupRes, revRes] = await Promise.all([
+        const [prodRes, catRes, selRes, coupRes, revRes] = await Promise.all([
           fetch('/api/v1/products?limit=200'),
           fetch('/api/v1/categories'),
+          fetch('/api/v1/sellers'),
           fetch('/api/v1/coupons/active'),
           fetch('/api/v1/reviews'),
         ]);
@@ -332,6 +425,12 @@ export default function App() {
           const json = await catRes.json();
           if (Array.isArray(json?.data) && json.data.length > 0) {
             setManagedCategories(json.data);
+          }
+        }
+        if (selRes.ok) {
+          const json = await selRes.json();
+          if (Array.isArray(json?.data) && json.data.length > 0) {
+            setSellers(json.data);
           }
         }
         if (coupRes.ok) {
@@ -530,15 +629,24 @@ export default function App() {
     return map;
   }, [coupons]);
 
+  const managedCategoriesWithCounts = useMemo(() => {
+    const published = catalogProducts.filter((p) => p.isPublished !== false);
+    const counts = calculateCategoryProductCounts(published);
+    return managedCategories.map((c) => ({
+      ...c,
+      itemCount: c.slug === 'all' ? counts.all || 0 : counts[c.slug] || 0,
+    }));
+  }, [managedCategories, catalogProducts]);
+
   const categoryItemsForGrid: CategoryItem[] = useMemo(
     () =>
-      managedCategories.map((c) => ({
+      managedCategoriesWithCounts.map((c) => ({
         id: c.id,
         name: c.name,
         slug: c.slug,
         itemCount: `${c.itemCount} products`,
       })),
-    [managedCategories]
+    [managedCategoriesWithCounts]
   );
 
   // Compute total quantity in cart
@@ -644,35 +752,49 @@ export default function App() {
 
   // Add Hero product variant to Cart
   const handleAddToCart = (variant: ProductVariant) => {
+    const maxStock = variant.inventoryCount ?? 99;
+    if (maxStock <= 0) {
+      showToast(`${FEATURED_PRODUCT.title} (${variant.name}) is currently out of stock`);
+      return;
+    }
+    const existing = cartItems.find((item) => item.variant.id === variant.id);
+    if (existing && existing.quantity >= maxStock) {
+      showToast(`Maximum available stock (${maxStock}) already in your bag`);
+      return;
+    }
+
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.variant.id === variant.id);
-      if (existing) {
+      const current = prev.find((item) => item.variant.id === variant.id);
+      if (current) {
         return prev.map((item) =>
           item.variant.id === variant.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: Math.min(maxStock, item.quantity + 1) }
             : item
         );
-      } else {
-        return [
-          ...prev,
-          {
-            variant: {
-              ...variant,
-              image:
-                variant.image ||
-                'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
-            },
-            quantity: 1,
-            productTitle: FEATURED_PRODUCT.title,
-          },
-        ];
       }
+      return [
+        ...prev,
+        {
+          variant: {
+            ...variant,
+            image:
+              variant.image ||
+              'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
+          },
+          quantity: 1,
+          productTitle: FEATURED_PRODUCT.title,
+        },
+      ];
     });
     showToast(`Added ${FEATURED_PRODUCT.title} (${variant.name}) to your bag`);
   };
 
   // Add Catalog Product to Cart
   const handleQuickAdd = (product: CatalogProduct) => {
+    if (product.stock <= 0) {
+      showToast(`${product.title} is currently out of stock`);
+      return;
+    }
     const variant: ProductVariant = {
       id: `var-${product.id}`,
       name: product.brand,
@@ -684,30 +806,39 @@ export default function App() {
       image: product.image,
     };
 
+    const existing = cartItems.find((item) => item.variant.id === variant.id);
+    if (existing && existing.quantity >= product.stock) {
+      showToast(`Maximum available stock (${product.stock}) for ${product.title} is already in your bag`);
+      return;
+    }
+
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.variant.id === variant.id);
-      if (existing) {
+      const current = prev.find((item) => item.variant.id === variant.id);
+      if (current) {
         return prev.map((item) =>
           item.variant.id === variant.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: Math.min(product.stock, item.quantity + 1) }
             : item
         );
-      } else {
-        return [
-          ...prev,
-          {
-            variant,
-            quantity: 1,
-            productTitle: product.title,
-          },
-        ];
       }
+      return [
+        ...prev,
+        {
+          variant,
+          quantity: 1,
+          productTitle: product.title,
+        },
+      ];
     });
     showToast(`Added ${product.title} to your bag`);
   };
 
   // Add from Quick View Modal with quantity
   const handleAddFromQuickView = (product: CatalogProduct, quantity: number) => {
+    if (product.stock <= 0) {
+      showToast(`${product.title} is currently out of stock`);
+      return;
+    }
     const variant: ProductVariant = {
       id: `var-${product.id}`,
       name: product.brand,
@@ -719,26 +850,33 @@ export default function App() {
       image: product.image,
     };
 
+    const existing = cartItems.find((item) => item.variant.id === variant.id);
+    const currentQty = existing?.quantity || 0;
+    const allowedAdd = Math.max(0, Math.min(quantity, product.stock - currentQty));
+    if (allowedAdd <= 0) {
+      showToast(`Maximum available stock (${product.stock}) already in your bag`);
+      return;
+    }
+
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.variant.id === variant.id);
-      if (existing) {
+      const current = prev.find((item) => item.variant.id === variant.id);
+      if (current) {
         return prev.map((item) =>
           item.variant.id === variant.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: Math.min(product.stock, item.quantity + allowedAdd) }
             : item
         );
-      } else {
-        return [
-          ...prev,
-          {
-            variant,
-            quantity,
-            productTitle: product.title,
-          },
-        ];
       }
+      return [
+        ...prev,
+        {
+          variant,
+          quantity: allowedAdd,
+          productTitle: product.title,
+        },
+      ];
     });
-    showToast(`Added ${quantity} × ${product.title} to your bag`);
+    showToast(`Added ${allowedAdd} × ${product.title} to your bag`);
   };
 
   // Toggle Wishlist status for any product (maps featured spotlight ID to catalog ID)
@@ -798,9 +936,18 @@ export default function App() {
       handleRemoveItem(variantId);
       return;
     }
+    const targetItem = cartItems.find((item) => item.variant.id === variantId);
+    const maxStock = targetItem?.variant.inventoryCount;
+    const clamped =
+      typeof maxStock === 'number' && maxStock > 0
+        ? Math.min(quantity, maxStock)
+        : quantity;
+    if (typeof maxStock === 'number' && maxStock > 0 && quantity > maxStock) {
+      showToast(`Maximum available stock (${maxStock}) reached`);
+    }
     setCartItems((prev) =>
       prev.map((item) =>
-        item.variant.id === variantId ? { ...item, quantity } : item
+        item.variant.id === variantId ? { ...item, quantity: clamped } : item
       )
     );
   };
@@ -939,30 +1086,31 @@ export default function App() {
 
     if (firebaseUser) {
       refreshToken()
-        .then((token) => {
+        .then(async (token) => {
           if (!token) return;
-          return Promise.all([
-            fetch('/api/v1/orders', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(newOrder),
+          const resp = await fetch('/api/v1/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              ...newOrder,
+              walletDeductionPaise: paymentInfo.walletDeductionPaise,
+              pointsRedeemed: paymentInfo.pointsRedeemed,
             }),
-            fetch('/api/v1/account/sync', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                loyaltyPoints: outcome.nextPoints,
-                tier: outcome.nextTier,
-                walletBalancePaise: outcome.nextWalletPaise,
-              }),
-            }),
-          ]);
+          });
+          if (resp.ok) {
+            const payload = await resp.json();
+            if (payload?.account) {
+              setCurrentUser((prev) => ({
+                ...prev,
+                loyaltyPoints: payload.account.loyaltyPoints ?? prev.loyaltyPoints,
+                tier: payload.account.tier ?? prev.tier,
+                walletBalancePaise: payload.account.walletBalancePaise ?? prev.walletBalancePaise,
+              }));
+            }
+          }
         })
         .catch(() => {});
     }
@@ -1205,12 +1353,17 @@ export default function App() {
   };
 
   const handleMoveAllToCart = (products: CatalogProduct[]) => {
-    products.forEach((p) => {
+    const inStock = products.filter((p) => p.stock > 0);
+    inStock.forEach((p) => {
       handleQuickAdd(p);
     });
     setIsWishlistOpen(false);
     setIsCartOpen(true);
-    showToast(`Transferred ${products.length} saved items to your bag`);
+    if (inStock.length < products.length) {
+      showToast(`Transferred ${inStock.length} in-stock saved items (out-of-stock skipped)`);
+    } else {
+      showToast(`Transferred ${inStock.length} saved items to your bag`);
+    }
   };
 
   const handleCategorySelect = (categorySlug: string) => {
@@ -1271,9 +1424,9 @@ export default function App() {
         onQuickFilter={handleQuickFilter}
       />
 
-      {/* VIEWPORT SWITCHER: Storefront vs 4-Agent Command Center */}
+      {/* VIEWPORT SWITCHER: Storefront vs Support Center */}
       {viewMode === 'command-center' ? (
-        <Suspense fallback={<div className="p-12 text-center text-xs text-slate-500">Loading NEXORA Command Center...</div>}>
+        <Suspense fallback={<div className="p-12 text-center text-xs text-slate-600 dark:text-slate-400">Loading NEXORA Support Center...</div>}>
           <CommandCenter
             onBackToStore={() => setViewMode('storefront')}
             currentUser={currentUser}
@@ -1366,6 +1519,7 @@ export default function App() {
         currentUser={currentUser}
         onSuccess={handlePaymentSuccess}
         onUpdateUserWallet={handleUpdateUserWallet}
+        getAuthHeaders={getAuthHeaders}
       />
 
       {/* 9. QUICK VIEW MODAL WITH SPECS & CUSTOMER REVIEWS */}
@@ -1485,7 +1639,7 @@ export default function App() {
           user={currentUser}
           sellers={sellers}
           products={catalogProducts}
-          categories={managedCategories}
+          categories={managedCategoriesWithCounts}
           orders={currentUser.orders}
           coupons={coupons}
           auditLogs={auditLogs}

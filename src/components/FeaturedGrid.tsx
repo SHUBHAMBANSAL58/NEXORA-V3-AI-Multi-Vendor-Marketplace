@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   SlidersHorizontal,
   ChevronDown,
@@ -66,6 +66,11 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [localSearch, setLocalSearch] = useState<string>('');
   const [showWishlistOnly, setShowWishlistOnly] = useState<boolean>(false);
+
+  // Reset pagination to page 1 when parent-controlled filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchFilter, quickFilter]);
 
   const activeCatalog = useMemo(() => {
     const source: CatalogProductWithMeta[] =
@@ -163,7 +168,16 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
         list.sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
         break;
       case 'newest':
-        list.reverse();
+        if (quickFilter !== 'new-releases') {
+          list.sort((a, b) => {
+            const aTime = (a as CatalogProductWithMeta).createdAt ? Date.parse((a as CatalogProductWithMeta).createdAt!) : 0;
+            const bTime = (b as CatalogProductWithMeta).createdAt ? Date.parse((b as CatalogProductWithMeta).createdAt!) : 0;
+            return bTime - aTime;
+          });
+          if (list.every((p) => !(p as CatalogProductWithMeta).createdAt)) {
+            list.reverse();
+          }
+        }
         break;
       case 'featured':
       default:
@@ -203,20 +217,20 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
       {/* 1. HEADER & DISCOVERY INTRO */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Curated Catalog · {activeCatalog.length} Masterworks</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Discover Exceptional Engineering
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-xl">
             Each product is rigorously audited for acoustic fidelity, tactile perfection, and mechanical craftsmanship.
           </p>
         </div>
 
         {/* Live Active Stats */}
-        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
           <span>
             Showing <strong className="text-slate-900 dark:text-white font-mono">{filteredProducts.length}</strong> products
           </span>
@@ -224,7 +238,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
             <button
               type="button"
               onClick={handleResetFilters}
-              className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400 hover:underline font-semibold cursor-pointer"
+              className="flex items-center gap-1 text-cyan-700 dark:text-cyan-400 hover:underline font-semibold cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Reset</span>
@@ -255,7 +269,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
               >
                 <span>{cat.name}</span>
                 {cat.slug !== 'all' && (
-                  <span className="ml-1.5 text-[10px] text-slate-400 font-mono">
+                  <span className="ml-1.5 text-[10px] text-slate-600 dark:text-slate-400 font-mono">
                     ({categoryCounts[cat.slug] ?? 0})
                   </span>
                 )}
@@ -272,13 +286,13 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
             }}
             className={`px-3.5 py-2 text-xs font-medium rounded-lg transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
               showWishlistOnly
-                ? 'bg-rose-500 text-white font-semibold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
+                ? 'bg-rose-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'
             }`}
           >
-            <Heart className={`w-3.5 h-3.5 ${showWishlistOnly ? 'fill-white text-white' : 'text-rose-500'}`} />
+            <Heart className={`w-3.5 h-3.5 ${showWishlistOnly ? 'fill-white text-white' : 'text-rose-600 dark:text-rose-400'}`} />
             <span>Wishlist</span>
-            <span className={`text-[10px] font-mono ${showWishlistOnly ? 'text-white' : 'text-slate-400'}`}>
+            <span className={`text-[10px] font-mono ${showWishlistOnly ? 'text-white' : 'text-slate-600 dark:text-slate-400'}`}>
               ({wishlistedIds.size})
             </span>
           </button>
@@ -367,7 +381,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
 
         {/* Right Side: Sorting */}
         <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-medium">Sort by:</span>
+          <span className="text-slate-700 dark:text-slate-300 font-medium">Sort by:</span>
           <div className="relative">
             <select
               aria-label="Sort products"
@@ -381,7 +395,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
               <option value="rating">Highest Rated</option>
               <option value="newest">Newest Releases</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -389,11 +403,11 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
       {/* 4. PRODUCT CARDS GRID */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-20 bg-white dark:bg-slate-900/40 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 p-8">
-          <Filter className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <Filter className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-slate-900 dark:text-white">
             No products match the selected criteria
           </h3>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-sm mx-auto">
             Try adjusting your category, price range, or clearing the search query to view available engineering pieces.
           </p>
           <button
@@ -423,10 +437,10 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
             ))}
           </div>
 
-          {/* 5. PAGINATION CONTROLS */}
+          {/* 5. PAGINATION CONTROLS (FIX-07: Counter immediately adjacent to pills, right-aligned on desktop) */}
           {totalPages > 1 && (
-            <div className="mt-12 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6">
-              <p className="text-xs text-slate-500">
+            <div className="mt-12 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 border-t border-slate-200 dark:border-slate-800 pt-6">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Page <strong className="font-mono text-slate-900 dark:text-white">{validCurrentPage}</strong> of{' '}
                 <strong className="font-mono text-slate-900 dark:text-white">{totalPages}</strong> ({filteredProducts.length} items total)
               </p>
@@ -436,7 +450,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
                   type="button"
                   disabled={validCurrentPage === 1}
                   onClick={() => handlePageChange(validCurrentPage - 1)}
-                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -447,10 +461,12 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
                     key={page}
                     type="button"
                     onClick={() => handlePageChange(page)}
+                    aria-label={`Page ${page}`}
+                    aria-current={validCurrentPage === page ? 'page' : undefined}
                     className={`w-8 h-8 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
                       validCurrentPage === page
                         ? 'bg-slate-900 text-white dark:bg-cyan-500 dark:text-slate-950 font-bold shadow-xs'
-                        : 'border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        : 'border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     {page}
@@ -461,7 +477,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
                   type="button"
                   disabled={validCurrentPage === totalPages}
                   onClick={() => handlePageChange(validCurrentPage + 1)}
-                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                   aria-label="Next page"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -475,7 +491,7 @@ export const FeaturedGrid: React.FC<FeaturedGridProps> = ({
             <div className="mt-16 pt-12 border-t border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 mb-1">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Algorithmic Recommendation Engine</span>
                   </div>

@@ -56,6 +56,7 @@ interface RazorpayModalProps {
     pointsRedeemed?: number;
   }) => void;
   onUpdateUserWallet?: (newBalancePaise: number) => void;
+  getAuthHeaders?: () => Promise<Record<string, string>>;
 }
 
 type PaymentMethodType = 'upi' | 'card' | 'netbanking' | 'cod' | 'wallet';
@@ -69,6 +70,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
   currentUser,
   onSuccess,
   onUpdateUserWallet,
+  getAuthHeaders,
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('upi');
   const [upiId, setUpiId] = useState('shubham@okhdfcbank');
@@ -94,11 +96,31 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
   const hasSufficientWalletBalance = walletBalancePaise >= effectivePayablePaise;
 
-  const handleDepositFunds = (depositAmountPaise: number) => {
-    const newBal = walletBalancePaise + depositAmountPaise;
-    setWalletBalancePaise(newBal);
+  const handleDepositFunds = async (depositAmountPaise: number) => {
+    let nextBal = walletBalancePaise + depositAmountPaise;
+    if (getAuthHeaders) {
+      try {
+        const headers = await getAuthHeaders();
+        if (headers.Authorization) {
+          const resp = await fetch('/api/v1/wallet/deposit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...headers },
+            body: JSON.stringify({ amountPaise: depositAmountPaise }),
+          });
+          if (resp.ok) {
+            const payload = await resp.json();
+            if (typeof payload?.data?.walletBalancePaise === 'number') {
+              nextBal = payload.data.walletBalancePaise;
+            }
+          }
+        }
+      } catch {
+        // fallback cleanly in local sandbox session
+      }
+    }
+    setWalletBalancePaise(nextBal);
     if (onUpdateUserWallet) {
-      onUpdateUserWallet(newBal);
+      onUpdateUserWallet(nextBal);
     }
     setDepositSuccessMsg(`Deposited ${formatCurrencyINR(depositAmountPaise)} into NexWallet!`);
     setTimeout(() => setDepositSuccessMsg(null), 3000);
@@ -429,23 +451,58 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
     }
 
     setIsProcessing(true);
-    setProcessingStage('Connecting to Razorpay 256-bit Secure Gateway...');
+    setProcessingStage('Connecting to Razorpay Sandbox Test Gateway...');
 
-    const randomId = `pay_NEX_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    const fallbackId = `pay_NEX_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+    const runGatewaySync = async (): Promise<string> => {
+      if (!getAuthHeaders) return fallbackId;
+      try {
+        const headers = await getAuthHeaders();
+        if (!headers.Authorization) return fallbackId;
+        const orderResp = await fetch('/api/v1/payments/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body: JSON.stringify({ amountPaise: Math.max(100, effectivePayablePaise) }),
+        });
+        if (!orderResp.ok) return fallbackId;
+        const orderPayload = await orderResp.json();
+        const rzpOrderId = orderPayload?.data?.razorpayOrderId;
+
+        const verifyResp = await fetch('/api/v1/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body: JSON.stringify({
+            razorpay_order_id: rzpOrderId,
+            razorpay_payment_id: fallbackId,
+          }),
+        });
+        if (verifyResp.ok) {
+          const verifyPayload = await verifyResp.json();
+          return verifyPayload?.data?.paymentId || fallbackId;
+        }
+      } catch {
+        // graceful sandbox fallback
+      }
+      return fallbackId;
+    };
+
+    const gatewayPromise = runGatewaySync();
 
     setTimeout(() => {
       if (selectedMethod === 'wallet') {
         setProcessingStage('Debiting NexWallet instant 1-tap balance...');
       } else {
-        setProcessingStage('Authenticating transaction with issuing bank...');
+        setProcessingStage('Authorizing simulated Razorpay sandbox payment...');
       }
     }, 600);
 
-    setTimeout(() => {
-      setProcessingStage('Payment captured successfully!');
+    setTimeout(async () => {
+      const resolvedPaymentId = await gatewayPromise;
+      setProcessingStage('Sandbox payment authorized!');
       setIsProcessing(false);
       setIsComplete(true);
-      setCompletedPaymentId(randomId);
+      setCompletedPaymentId(resolvedPaymentId);
 
       const selectedDayObj = availableBusinessDays.find((d) => d.dateString === activeDateStr);
       const formattedDeliveryDate = selectedDayObj
@@ -465,9 +522,9 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
           paytm: 'Paytm',
           cred: 'CRED Pay',
         };
-        let methodLabel = `Razorpay UPI (${upiAppLabels[selectedApp]})`;
-        if (selectedMethod === 'card') methodLabel = `Razorpay Card (${cardNumber.slice(-4)})`;
-        if (selectedMethod === 'netbanking') methodLabel = `Razorpay NetBanking (${selectedBank})`;
+        let methodLabel = `Razorpay Sandbox UPI (${upiAppLabels[selectedApp]})`;
+        if (selectedMethod === 'card') methodLabel = `Razorpay Sandbox Card (${cardNumber.slice(-4)})`;
+        if (selectedMethod === 'netbanking') methodLabel = `Razorpay Sandbox NetBanking (${selectedBank})`;
         if (selectedMethod === 'cod') methodLabel = 'Cash on Delivery (Pay at Doorstep)';
         if (selectedMethod === 'wallet') {
           methodLabel =
@@ -483,7 +540,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
           : undefined;
 
         onSuccess({
-          paymentId: randomId,
+          paymentId: resolvedPaymentId,
           method: methodLabel,
           deliveryAddress: selectedAddress,
           preferredDeliveryDate: formattedDeliveryDate,
@@ -520,7 +577,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-300">
                 <Lock className="w-3 h-3 text-cyan-400 shrink-0" />
-                <span className="truncate">Razorpay Standard Checkout (Sandbox)</span>
+                <span className="truncate">Razorpay Sandbox Test Checkout · Simulated Settlement</span>
               </div>
             </div>
           </div>
@@ -546,7 +603,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
             )}
 
             <div className="text-right">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">Total Payable</span>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-300 block">Total Payable</span>
               <span className="text-lg sm:text-xl font-bold font-mono tabular-nums text-cyan-400">
                 {formatCurrencyINR(effectivePayablePaise)}
               </span>
@@ -562,7 +619,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label="Close checkout"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -605,7 +662,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                     </>
                   )}
                 </button>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] text-slate-600 dark:text-slate-400">
                   Confirm address &amp; payment hands-free
                 </span>
               </div>
@@ -617,7 +674,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold ${
                     addressConfirmed
                       ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   <CheckCircle2 className="w-3 h-3" />
@@ -628,7 +685,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold ${
                     paymentConfirmed
                       ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      : 'bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   <CheckCircle2 className="w-3 h-3" />
@@ -663,7 +720,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
             </form>
 
             <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Try:</span>
+              <span className="text-slate-600 dark:text-slate-400 font-medium">Try:</span>
               {dynamicVoiceHints.map((hint) => (
                 <button
                   key={hint}
@@ -679,7 +736,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
             {(voiceTranscript || voiceFeedback || voiceErrorMsg) && (
               <div className="space-y-1 pt-0.5">
                 {voiceTranscript && (
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                  <p className="text-[11px] text-slate-700 dark:text-slate-300">
                     Transcript: <strong className="font-mono">"{voiceTranscript}"</strong>
                   </p>
                 )}
@@ -708,8 +765,8 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Payment Authorized!</h3>
-              <p className="text-xs text-slate-500 font-mono mt-1">Transaction ID: {completedPaymentId}</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Sandbox Payment Authorized!</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-mono mt-1">Transaction ID: {completedPaymentId}</p>
             </div>
             {isGiftReceipt && (
               <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-[11px] text-purple-800 dark:text-purple-300 flex items-center gap-2">
@@ -717,23 +774,23 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 <span>Gift Receipt activated: Prices masked on invoice and shipment slip.</span>
               </div>
             )}
-            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm">
-              Your order has been verified and registered on the NEXORA India Logistics Network. Generating order tracking...
+            <p className="text-xs text-slate-700 dark:text-slate-300 max-w-sm">
+              Your simulated sandbox order has been verified and registered on the NEXORA India Logistics Network. Generating order tracking...
             </p>
           </div>
         ) : isProcessing ? (
           <div className="p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-4">
             <Loader2 className="w-12 h-12 text-cyan-500 animate-spin" />
-            <h4 className="font-bold text-slate-900 dark:text-white text-base">Processing Transaction</h4>
-            <p className="text-xs text-slate-500 font-mono animate-pulse">{processingStage}</p>
-            <p className="text-[11px] text-slate-400">Please do not refresh or close this browser window.</p>
+            <h4 className="font-bold text-slate-900 dark:text-white text-base">Processing Sandbox Transaction</h4>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-mono animate-pulse">{processingStage}</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">Please do not refresh or close this browser window.</p>
           </div>
         ) : (
           <div className="flex flex-col md:flex-row flex-1 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800 overflow-y-auto">
             
             {/* Left Nav: Payment Methods & Options */}
             <div className="w-full md:w-5/12 bg-slate-50 dark:bg-slate-950/40 p-3 sm:p-4 space-y-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-2 block mb-2 font-bold">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 px-2 block mb-2 font-bold">
                 Payment Options
               </span>
 
@@ -781,7 +838,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 <QrCode className="w-4 h-4 text-cyan-500 shrink-0" />
                 <div className="flex-1">
                   <div>UPI / QR Code</div>
-                  <div className="text-[10px] text-slate-400 font-normal">GPay, PhonePe, Paytm, CRED</div>
+                  <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">GPay, PhonePe, Paytm, CRED</div>
                 </div>
               </button>
 
@@ -800,7 +857,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 <CreditCard className="w-4 h-4 text-cyan-500 shrink-0" />
                 <div className="flex-1">
                   <div>Credit / Debit Cards</div>
-                  <div className="text-[10px] text-slate-400 font-normal">Visa, Mastercard, RuPay</div>
+                  <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">Visa, Mastercard, RuPay</div>
                 </div>
               </button>
 
@@ -819,7 +876,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 <Building2 className="w-4 h-4 text-cyan-500 shrink-0" />
                 <div className="flex-1">
                   <div>Net Banking</div>
-                  <div className="text-[10px] text-slate-400 font-normal">All Indian Scheduled Banks</div>
+                  <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">All Indian Scheduled Banks</div>
                 </div>
               </button>
 
@@ -838,7 +895,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 <Banknote className="w-4 h-4 text-emerald-500 shrink-0" />
                 <div className="flex-1">
                   <div>Cash on Delivery</div>
-                  <div className="text-[10px] text-slate-400 font-normal">Pay cash/UPI at doorstep</div>
+                  <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">Pay cash/UPI at doorstep</div>
                 </div>
               </button>
 
@@ -885,9 +942,9 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
               </div>
 
               {/* Delivery Address Selector & Confirmation */}
-              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 space-y-1.5">
+              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono uppercase text-[9px] text-slate-400 flex items-center gap-1">
+                  <span className="font-mono uppercase text-[9px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-cyan-500" />
                     <span>Delivering To</span>
                   </span>
@@ -897,7 +954,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                     className={`text-[10px] font-semibold cursor-pointer flex items-center gap-1 ${
                       addressConfirmed
                         ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-cyan-600 dark:text-cyan-400 hover:underline'
+                        : 'text-cyan-700 dark:text-cyan-400 hover:underline'
                     }`}
                   >
                     <CheckCircle2 className="w-3 h-3" />
@@ -926,7 +983,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                     <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                       {selectedAddress.name}
                     </p>
-                    <p className="text-slate-500 truncate">
+                    <p className="text-slate-600 dark:text-slate-400 truncate">
                       {selectedAddress.street}, {selectedAddress.city} - {selectedAddress.pinCode}
                     </p>
                   </>
@@ -936,11 +993,11 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
               {/* Preferred Delivery Date (Business Days Only) */}
               <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono uppercase text-[9px] text-slate-400 font-bold flex items-center gap-1">
+                  <span className="font-mono uppercase text-[9px] text-slate-600 dark:text-slate-400 font-bold flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-cyan-500" />
                     Preferred Delivery Date
                   </span>
-                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-medium">
+                  <span className="text-[10px] text-cyan-700 dark:text-cyan-400 font-medium">
                     Mon–Fri Only
                   </span>
                 </div>
@@ -956,12 +1013,12 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                         onClick={() => handleSelectBusinessDay(day.dateString)}
                         className={`px-2 py-1.5 rounded-lg border text-left text-[11px] transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-cyan-500 text-white border-cyan-500 font-semibold shadow-xs'
+                            ? 'bg-cyan-600 text-white border-cyan-600 font-semibold shadow-xs'
                             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-cyan-400'
                         }`}
                       >
                         <div className="truncate font-medium">{day.displayLabel}</div>
-                        <div className={`text-[9px] ${isSelected ? 'text-cyan-100' : 'text-slate-400'}`}>
+                        <div className={`text-[9px] ${isSelected ? 'text-cyan-50' : 'text-slate-600 dark:text-slate-400'}`}>
                           {day.isFastest ? '⚡ Fastest' : day.dayOfWeek}
                         </div>
                       </button>
@@ -988,7 +1045,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                       <button
                         type="button"
                         onClick={handleSnapToNextBusinessDay}
-                        className="font-bold underline text-cyan-600 dark:text-cyan-400 cursor-pointer block"
+                        className="font-bold underline text-cyan-700 dark:text-cyan-400 cursor-pointer block"
                       >
                         Select Next Business Day ({availableBusinessDays[0]?.displayLabel})
                       </button>
@@ -1003,14 +1060,14 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowDeliveryNotes(true)}
-                    className="text-[11px] font-medium text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-medium text-cyan-700 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <FileText className="w-3 h-3" />
                     <span>+ Add Special Delivery Instructions / Notes</span>
                   </button>
                 ) : (
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono uppercase text-slate-400">
+                    <div className="flex items-center justify-between text-[10px] font-mono uppercase text-slate-600 dark:text-slate-400">
                       <span>Delivery Instructions</span>
                       <button
                         type="button"
@@ -1018,7 +1075,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                           setShowDeliveryNotes(false);
                           setOrderNotes('');
                         }}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                        className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
                       >
                         Remove
                       </button>
@@ -1197,7 +1254,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
                     <div className="space-y-1 text-xs">
                       <p className="font-bold text-slate-800 dark:text-slate-200">Scan with any UPI App</p>
-                      <p className="text-[11px] text-slate-500">Google Pay, PhonePe, Paytm, CRED, Amazon Pay or BHIM</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">Google Pay, PhonePe, Paytm, CRED, Amazon Pay or BHIM</p>
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {(
                           [
@@ -1214,7 +1271,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                             className={`px-2 py-0.5 rounded text-[9px] font-mono font-semibold border transition-colors cursor-pointer ${
                               selectedApp === app.id
                                 ? 'bg-cyan-600 text-white border-cyan-600'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-cyan-500'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-cyan-500'
                             }`}
                           >
                             {app.label}
@@ -1226,7 +1283,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
                   {/* Or Enter UPI ID */}
                   <div className="space-y-1.5">
-                    <label htmlFor="razorpay-upi-input" className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                    <label htmlFor="razorpay-upi-input" className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                       Or Enter Virtual Payment Address (UPI ID)
                     </label>
                     <div className="flex gap-2">
@@ -1258,13 +1315,13 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Enter Card Details</span>
-                    <div className="flex gap-1 text-[10px] font-mono text-slate-500">
+                    <div className="flex gap-1 text-[10px] font-mono text-slate-600 dark:text-slate-400">
                       <span>Visa</span> · <span>Mastercard</span> · <span>RuPay</span>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] text-slate-500">Card Number</label>
+                    <label className="text-[11px] text-slate-700 dark:text-slate-300">Card Number</label>
                     <input
                       type="text"
                       value={cardNumber}
@@ -1276,7 +1333,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] text-slate-500">Valid Thru (MM/YY)</label>
+                      <label className="text-[11px] text-slate-700 dark:text-slate-300">Valid Thru (MM/YY)</label>
                       <input
                         type="text"
                         value={cardExpiry}
@@ -1286,7 +1343,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] text-slate-500">CVV / CVC</label>
+                      <label className="text-[11px] text-slate-700 dark:text-slate-300">CVV / CVC</label>
                       <input
                         type="password"
                         value={cardCvv}
@@ -1298,7 +1355,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] text-slate-500">Name on Card</label>
+                    <label className="text-[11px] text-slate-700 dark:text-slate-300">Name on Card</label>
                     <input
                       type="text"
                       value={cardName}
@@ -1321,7 +1378,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                         onClick={() => setSelectedBank(bank)}
                         className={`p-2.5 rounded-xl border text-xs text-left transition-colors cursor-pointer ${
                           selectedBank === bank
-                            ? 'border-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/40 font-bold text-cyan-600 dark:text-cyan-400'
+                            ? 'border-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/40 font-bold text-cyan-700 dark:text-cyan-400'
                             : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300'
                         }`}
                       >
@@ -1331,7 +1388,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                   </div>
 
                   <div className="pt-2">
-                    <label className="text-[11px] text-slate-500 block mb-1">Or choose other bank</label>
+                    <label className="text-[11px] text-slate-700 dark:text-slate-300 block mb-1">Or choose other bank</label>
                     <select
                       value={selectedBank}
                       onChange={(e) => setSelectedBank(e.target.value)}
@@ -1358,10 +1415,10 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                     <Banknote className="w-4 h-4" />
                     <span>Cash on Delivery Available</span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                     You can pay in cash or via any UPI QR code scan to the delivery executive when your package reaches your doorstep at {selectedAddress.city} - {selectedAddress.pinCode}.
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
                     A confirmation OTP will be sent to {selectedAddress.phone} prior to delivery dispatch.
                   </p>
                 </div>
@@ -1374,7 +1431,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                     <CalendarCheck className="w-3.5 h-3.5 text-cyan-500" />
                     <span>Scheduled Delivery Window</span>
                   </span>
-                  <span className="font-semibold text-cyan-600 dark:text-cyan-400">
+                  <span className="font-semibold text-cyan-700 dark:text-cyan-400">
                     {availableBusinessDays.find((d) => d.dateString === selectedDateString)?.formattedFull || selectedDateString}
                   </span>
                 </div>
@@ -1387,7 +1444,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
                 )}
 
                 {orderNotes.trim() && (
-                  <div className="flex items-start gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                  <div className="flex items-start gap-1.5 text-slate-600 dark:text-slate-400 text-[10px] pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
                     <FileText className="w-3 h-3 shrink-0 mt-0.5 text-cyan-500" />
                     <span className="truncate">Notes: "{orderNotes}"</span>
                   </div>
@@ -1396,19 +1453,19 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
               {/* Price Breakdown Footer */}
               <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex justify-between text-xs text-slate-500">
+                <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Subtotal</span>
                   <span className="font-mono">{formatCurrencyINR(subtotalPaise)}</span>
                 </div>
                 {useNexPoints && (
-                  <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
+                  <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400">
                     <span>Loyalty NexPoints Discount</span>
                     <span className="font-mono font-semibold">- {formatCurrencyINR(pointsDiscountPaise)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-xs text-slate-500">
+                <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Express Shipping</span>
-                  <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                  <span className="font-mono text-emerald-700 dark:text-emerald-400">
                     {shippingPaise === 0 ? 'FREE' : formatCurrencyINR(shippingPaise)}
                   </span>
                 </div>

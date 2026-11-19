@@ -124,7 +124,7 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close invoice modal"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -159,7 +159,7 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
               <p className="font-semibold text-slate-700 mt-1">
                 NEXORA HyperCommerce India Pvt Ltd
               </p>
-              <p className="text-slate-500 text-[11px] leading-relaxed">
+              <p className="text-slate-600 text-[11px] leading-relaxed">
                 Regal Building, Sansad Marg, Connaught Place<br />
                 New Delhi, Delhi — 110001, India<br />
                 <strong>GSTIN:</strong> 07AABCN8942K1Z9 · <strong>State Code:</strong> 07 (Delhi)
@@ -179,11 +179,11 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
               <p className="text-sm font-bold font-mono text-slate-900 mt-2">
                 INVOICE #{order.id.replace('NEX-ORD', 'INV-2026')}
               </p>
-              <p className="text-slate-500 text-[11px] mt-0.5">
-                Date: <strong className="text-slate-800">{order.date}</strong>
+              <p className="text-slate-600 text-[11px] mt-0.5">
+                Date: <strong className="text-slate-900">{order.date}</strong>
               </p>
-              <p className="text-slate-500 text-[11px]">
-                Order Ref: <strong className="font-mono text-slate-800">{order.id}</strong>
+              <p className="text-slate-600 text-[11px]">
+                Order Ref: <strong className="font-mono text-slate-900">{order.id}</strong>
               </p>
             </div>
           </div>
@@ -191,24 +191,24 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
           {/* Billing & Shipping Columns */}
           <div className="grid grid-cols-2 gap-6 p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">
                 Billed To &amp; Shipped To:
               </p>
               <p className="font-bold text-slate-900 text-xs">
                 {billingAddr?.name || user.name}
               </p>
-              <p className="text-slate-600 text-[11px] mt-0.5 leading-relaxed">
+              <p className="text-slate-700 text-[11px] mt-0.5 leading-relaxed">
                 {billingAddr?.street || '42, Barakhamba Road, Connaught Place'}<br />
                 {billingAddr?.city || 'New Delhi'}, {billingAddr?.state || 'Delhi'} —{' '}
                 <span className="font-mono font-semibold">{billingAddr?.pinCode || '110001'}</span>
               </p>
-              <p className="text-slate-500 text-[11px] mt-1">
+              <p className="text-slate-600 text-[11px] mt-1">
                 Phone: {billingAddr?.phone || user.phone || '+91 98765 43210'} · Email: {user.email}
               </p>
             </div>
 
-            <div className="border-l border-slate-200 pl-6 space-y-1 text-[11px] text-slate-600">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <div className="border-l border-slate-200 pl-6 space-y-1 text-[11px] text-slate-700">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">
                 Dispatch &amp; Payment Details:
               </p>
               <p>
@@ -249,18 +249,18 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
                   const hsn = getProductHsnCode(catalogMatch?.categorySlug);
                   return (
                     <tr key={idx}>
-                      <td className="p-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                      <td className="p-3 font-semibold text-slate-800">{item.title}</td>
-                      <td className="p-3 font-mono text-slate-500 text-[11px]">{hsn}</td>
+                      <td className="p-3 text-slate-600 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="p-3 font-semibold text-slate-900">{item.title}</td>
+                      <td className="p-3 font-mono text-slate-600 text-[11px]">{hsn}</td>
                       <td className="p-3 text-right font-mono">{item.quantity}</td>
                       <td className="p-3 text-right font-mono">
                         {isMasked ? (
-                          <span className="text-purple-600 font-semibold">[GIFT]</span>
+                          <span className="text-purple-700 font-semibold">[GIFT]</span>
                         ) : (
                           formatCurrencyINR(Math.round(item.pricePaise / 1.18))
                         )}
                       </td>
-                      <td className="p-3 text-right font-mono text-slate-500">
+                      <td className="p-3 text-right font-mono text-slate-600">
                         {isMasked ? '—' : '18%'}
                       </td>
                       <td className="p-3 text-right font-mono font-bold text-slate-900">
@@ -316,20 +316,20 @@ export const GSTInvoiceModal: React.FC<GSTInvoiceModalProps> = ({
           </div>
 
           {/* Declaration and Digital Signature */}
-          <div className="pt-6 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-6 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-600">
             <div>
-              <p className="font-semibold text-slate-700">Declaration:</p>
+              <p className="font-semibold text-slate-800">Declaration:</p>
               <p className="max-w-md">
                 We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct under the Central Goods and Services Tax Act, 2017.
               </p>
             </div>
             <div className="text-right">
-              <div className="inline-flex items-center gap-1 text-emerald-600 font-semibold mb-1">
+              <div className="inline-flex items-center gap-1 text-emerald-700 font-semibold mb-1">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Digitally Verified & Signed</span>
               </div>
-              <p className="text-[10px] text-slate-400">For NEXORA HyperCommerce India Pvt Ltd</p>
-              <p className="text-[10px] font-mono text-slate-400">Auth Signature Ref: #NX-DS-94021</p>
+              <p className="text-[10px] text-slate-600">For NEXORA HyperCommerce India Pvt Ltd</p>
+              <p className="text-[10px] font-mono text-slate-600">Auth Signature Ref: #NX-DS-94021</p>
             </div>
           </div>
         </div>

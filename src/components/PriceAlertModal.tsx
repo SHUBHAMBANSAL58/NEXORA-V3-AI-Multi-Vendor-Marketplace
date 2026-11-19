@@ -23,7 +23,7 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
 }) => {
   const defaultTargetRupees = product ? Math.round((product.pricePaise * 0.9) / 100) : 0;
   const [targetRupees, setTargetRupees] = useState<number>(defaultTargetRupees);
-  const [email, setEmail] = useState<string>(userEmail || 'bansalshubham662@gmail.com');
+  const [email, setEmail] = useState<string>(userEmail || '');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -78,20 +78,21 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Close price alert modal"
+          className="absolute top-4 right-4 p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center">
             <Bell className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Set Price Drop Alert
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Get notified immediately when this item drops below your target.
             </p>
           </div>
@@ -110,7 +111,7 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
               {product.title}
             </h4>
             <div className="flex items-center gap-2 mt-0.5 text-xs">
-              <span className="text-slate-500">Current Price:</span>
+              <span className="text-slate-600 dark:text-slate-400">Current Price:</span>
               <span className="font-mono font-bold text-slate-900 dark:text-white">
                 {formatCurrencyINR(product.pricePaise)}
               </span>
@@ -124,7 +125,7 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
               Target Price Threshold (in INR)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 font-bold text-slate-400">₹</span>
+              <span className="absolute left-3 top-2.5 font-bold text-slate-600 dark:text-slate-400">₹</span>
               <input
                 type="number"
                 min={100}
@@ -135,9 +136,9 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
                 required
               />
             </div>
-            <div className="flex justify-between items-center mt-1 text-[11px] text-slate-500">
+            <div className="flex justify-between items-center mt-1 text-[11px] text-slate-600 dark:text-slate-400">
               <span>Potential Savings:</span>
-              <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">
                 {formatCurrencyINR(savingsPaise)} ({savingsPercent}% OFF)
               </span>
             </div>

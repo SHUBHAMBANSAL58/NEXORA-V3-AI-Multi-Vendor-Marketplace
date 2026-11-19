@@ -319,6 +319,72 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
     onNotifyToast(`Application submitted for ${newSeller.storeName}. Pending Admin Governance review.`);
   };
 
+  const syncSellerProductUpdate = async (productId: string, updates: Partial<CatalogProductWithMeta>) => {
+    onUpdateProduct(productId, updates);
+    if (!getAuthHeaders) return;
+    try {
+      const headers = await getAuthHeaders();
+      if (!headers.Authorization) return;
+      await fetch(`/api/v1/seller/products/${encodeURIComponent(productId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify(updates),
+      });
+    } catch {
+      // keep responsive UI state on offline/sandbox runs
+    }
+  };
+
+  const syncSellerProductDelete = async (productId: string, title: string) => {
+    onDeleteProduct(productId);
+    onNotifyToast(`Removed ${title} from seller catalog.`);
+    if (!getAuthHeaders) return;
+    try {
+      const headers = await getAuthHeaders();
+      if (!headers.Authorization) return;
+      await fetch(`/api/v1/seller/products/${encodeURIComponent(productId)}`, {
+        method: 'DELETE',
+        headers,
+      });
+    } catch {
+      // keep responsive UI state
+    }
+  };
+
+  const syncSellerOrderStage = async (orderId: string, nextStage: OrderStage) => {
+    onUpdateOrderStage(orderId, nextStage);
+    onNotifyToast(`Order ${orderId} advanced to ${nextStage}.`);
+    if (!getAuthHeaders) return;
+    try {
+      const headers = await getAuthHeaders();
+      if (!headers.Authorization) return;
+      await fetch(`/api/v1/seller/orders/${encodeURIComponent(orderId)}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ trackingStage: nextStage }),
+      });
+    } catch {
+      // keep responsive UI state
+    }
+  };
+
+  const syncSellerInquiryStatus = async (inquiryId: string, status: BulkOrderInquiry['status'], toastMsg: string) => {
+    onUpdateBulkInquiryStatus(inquiryId, status);
+    onNotifyToast(toastMsg);
+    if (!getAuthHeaders) return;
+    try {
+      const headers = await getAuthHeaders();
+      if (!headers.Authorization) return;
+      await fetch(`/api/v1/seller/inquiries/${encodeURIComponent(inquiryId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ status }),
+      });
+    } catch {
+      // keep responsive UI state
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-xs animate-in fade-in duration-200"
@@ -356,7 +422,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 {activeSeller?.storeName} · GSTIN:{' '}
                 <span className="font-mono">{activeSeller?.gstin}</span> · Commission:{' '}
                 <span className="font-mono">{activeSeller?.commissionRate}%</span>
@@ -381,7 +447,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close Seller Central"
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 cursor-pointer"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -391,25 +457,25 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
         {/* KPI Bar */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#070b12]">
           <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-            <p className="text-[11px] text-slate-500 font-medium">Payout Wallet Balance</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Payout Wallet Balance</p>
             <p className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
               {formatCurrencyINR(activeSeller?.balancePaise || 0)}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-            <p className="text-[11px] text-slate-500 font-medium">Active Store SKUs</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Active Store SKUs</p>
             <p className="text-base font-bold font-mono text-slate-900 dark:text-white mt-0.5">
               {sellerProducts.length}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-            <p className="text-[11px] text-slate-500 font-medium">Orders Queue</p>
-            <p className="text-base font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Orders Queue</p>
+            <p className="text-base font-bold font-mono text-cyan-700 dark:text-cyan-400 mt-0.5">
               {sellerOrders.length}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-            <p className="text-[11px] text-slate-500 font-medium">Session GMV Routed</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Session GMV Routed</p>
             <p className="text-base font-bold font-mono text-slate-900 dark:text-white mt-0.5">
               {formatCurrencyINR(grossSellerRevenue)}
             </p>
@@ -435,8 +501,8 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                   active
-                    ? 'border-cyan-500 text-cyan-600 dark:text-cyan-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'border-cyan-500 text-cyan-700 dark:text-cyan-400'
+                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -597,7 +663,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
               {/* Store SKU Inventory Table */}
               <div className="lg:col-span-7 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                     Store Inventory ({sellerProducts.length} SKUs)
                   </h3>
                 </div>
@@ -617,9 +683,9 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                           <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
                             {p.title}
                           </p>
-                          <p className="text-[11px] text-slate-500 font-mono">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                             SKU: {p.sku} · HSN: {p.hsnCode || getProductHsnCode(p.categorySlug)} ·{' '}
-                            <span className="text-cyan-600 dark:text-cyan-400 font-semibold">
+                            <span className="text-cyan-700 dark:text-cyan-400 font-semibold">
                               {formatCurrencyINR(p.pricePaise)}
                             </span>
                           </p>
@@ -629,7 +695,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                       <div className="flex items-center gap-2 text-xs">
                         <button
                           type="button"
-                          onClick={() => onUpdateProduct(p.id, { stock: p.stock + 5 })}
+                          onClick={() => void syncSellerProductUpdate(p.id, { stock: p.stock + 5 })}
                           className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-mono font-semibold hover:border-cyan-500 cursor-pointer"
                           title="Restock +5 units"
                         >
@@ -638,14 +704,15 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                         <button
                           type="button"
                           onClick={() =>
-                            onUpdateProduct(p.id, { isPublished: p.isPublished === false })
+                            void syncSellerProductUpdate(p.id, { isPublished: p.isPublished === false })
                           }
                           className={`p-1.5 rounded-lg border cursor-pointer ${
                             p.isPublished === false
-                              ? 'border-amber-500/40 text-amber-500 bg-amber-500/10'
-                              : 'border-emerald-500/40 text-emerald-500 bg-emerald-500/10'
+                              ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                              : 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
                           }`}
                           title={p.isPublished === false ? 'Hidden — Click to publish' : 'Published'}
+                          aria-label={p.isPublished === false ? `Publish ${p.title}` : `Hide ${p.title}`}
                         >
                           {p.isPublished === false ? (
                             <EyeOff className="w-3.5 h-3.5" />
@@ -655,11 +722,8 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            onDeleteProduct(p.id);
-                            onNotifyToast(`Removed ${p.title} from seller catalog.`);
-                          }}
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 cursor-pointer"
+                          onClick={() => void syncSellerProductDelete(p.id, p.title)}
+                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-rose-500 cursor-pointer"
                           aria-label={`Delete ${p.title}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -675,7 +739,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
           {activeTab === 'orders' && (
             <div className="space-y-3">
               {sellerOrders.length === 0 ? (
-                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-500">
+                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400">
                   No customer orders placed for this store yet. Place an order on the storefront to manage fulfillment stages here.
                 </div>
               ) : (
@@ -704,14 +768,14 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                           <span className="font-mono font-bold text-slate-900 dark:text-white">
                             {ord.id}
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-700 dark:text-cyan-400">
                             {ord.status}
                           </span>
                         </div>
-                        <p className="text-slate-500">
+                        <p className="text-slate-600 dark:text-slate-400">
                           {ord.items.map((i) => `${i.title} ×${i.quantity}`).join(', ')}
                         </p>
-                        <p className="text-[11px] text-slate-400 font-mono">
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                           AWB: {ord.trackingNumber} · {ord.deliveryAddress ? `${ord.deliveryAddress.city} (${ord.deliveryAddress.pinCode})` : 'New Delhi'}
                         </p>
                       </div>
@@ -723,10 +787,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                         {canAdvance && nextStage && (
                           <button
                             type="button"
-                            onClick={() => {
-                              onUpdateOrderStage(ord.id, nextStage);
-                              onNotifyToast(`Order ${ord.id} advanced to ${nextStage}.`);
-                            }}
+                            onClick={() => void syncSellerOrderStage(ord.id, nextStage)}
                             className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
                           >
                             <span>Mark {nextStage}</span>
@@ -744,7 +805,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
           {activeTab === 'inquiries' && (
             <div className="space-y-3">
               {sellerInquiries.length === 0 ? (
-                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-500">
+                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400">
                   No B2B institutional quotes submitted yet.
                 </div>
               ) : (
@@ -758,35 +819,41 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                         <span className="font-bold text-slate-900 dark:text-white">
                           {inq.companyName}
                         </span>
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-500 font-bold">
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-bold">
                           {inq.status}
                         </span>
                       </div>
-                      <p className="text-slate-600 dark:text-slate-300">
+                      <p className="text-slate-700 dark:text-slate-300">
                         {inq.productTitle} · Qty: <strong className="font-mono">{inq.quantity}</strong> · Offer:{' '}
                         <strong className="font-mono">{formatCurrencyINR(inq.offeredUnitPaise)}/unit</strong>
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
                         Contact: {inq.contactName} ({inq.contactEmail})
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          onUpdateBulkInquiryStatus(inq.id, 'Accepted');
-                          onNotifyToast(`Accepted corporate quote ${inq.id}.`);
-                        }}
+                        onClick={() =>
+                          void syncSellerInquiryStatus(
+                            inq.id,
+                            'Accepted',
+                            `Accepted corporate quote ${inq.id}.`
+                          )
+                        }
                         className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer"
                       >
                         Accept Quote
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          onUpdateBulkInquiryStatus(inq.id, 'Negotiation');
-                          onNotifyToast(`Marked quote ${inq.id} for negotiation.`);
-                        }}
+                        onClick={() =>
+                          void syncSellerInquiryStatus(
+                            inq.id,
+                            'Negotiation',
+                            `Marked quote ${inq.id} for negotiation.`
+                          )
+                        }
                         className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-cyan-500 font-semibold cursor-pointer"
                       >
                         Negotiate
@@ -807,7 +874,7 @@ export const SellerDashboardModal: React.FC<SellerDashboardModalProps> = ({
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   Apply as a Verified NEXORA Vendor Partner
                 </h3>
-                <p className="text-slate-500 mt-0.5">
+                <p className="text-slate-600 dark:text-slate-400 mt-0.5">
                   Requires valid 15-character Indian GSTIN. Applications enter Admin Governance verification queue.
                 </p>
               </div>

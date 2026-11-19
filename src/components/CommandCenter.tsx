@@ -122,7 +122,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
                 Four-Agent Orchestrator
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
               Autonomous Engineering Command &amp; Telemetry Center
             </p>
           </div>
@@ -132,7 +132,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
           <button
             type="button"
             onClick={fetchState}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
+            className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
             title="Refresh Telemetry"
             aria-label="Refresh Telemetry"
           >
@@ -159,7 +159,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
               <Activity className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
               <span>Specialized Engineering Agents</span>
             </h2>
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
               Workflow: Planner → Designer → Builder → Tester
             </span>
           </div>
@@ -177,11 +177,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
               </div>
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent 1: Planner</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Strategic Project Intelligence
                 </p>
               </div>
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-mono">
                 <span>Completed Tasks</span>
                 <span className="text-slate-900 dark:text-white font-bold">{completedTaskCount}</span>
               </div>
@@ -199,11 +199,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
               </div>
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent 2: Designer</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   UI/UX &amp; Design Tokens
                 </p>
               </div>
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-mono">
                 <span>Design Tokens</span>
                 <span className="text-slate-900 dark:text-white font-bold">Obsidian / Pearl</span>
               </div>
@@ -212,7 +212,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
             {/* Agent 3: BUILDER */}
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16] shadow-xs space-y-3 relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="p-2 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-900/40">
+                <div className="p-2 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-900/40">
                   <Code2 className="w-4 h-4" />
                 </div>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
@@ -221,11 +221,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
               </div>
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent 3: Builder</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Full-Stack Implementation
                 </p>
               </div>
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-mono">
                 <span>Active Runtime</span>
                 <span className="text-slate-900 dark:text-white font-bold">Express + Vite</span>
               </div>
@@ -234,7 +234,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
             {/* Agent 4: TESTER */}
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16] shadow-xs space-y-3 relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
+                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
@@ -243,13 +243,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
               </div>
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent 4: Tester</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Independent Verification QA
                 </p>
               </div>
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-mono">
                 <span>Checks Recorded</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                <span className="text-emerald-700 dark:text-emerald-400 font-bold">
                   {totalTestsFailed} Failed / {totalTestsPassed} Passed
                 </span>
               </div>
@@ -273,7 +273,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Dispatch Engineering Task through Four-Agent Pipeline</span>
               </h3>
-              <span className="text-xs text-slate-500 font-mono">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                 Sequential verification &amp; bounded retries
               </span>
             </div>
@@ -355,7 +355,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
                       </span>
                     </div>
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white mt-1.5">{t.title}</h4>
-                    <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                    <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
                       <span>{t.phase}</span>
                       <span>Priority: {t.priority}</span>
                     </div>
@@ -452,7 +452,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
                 </div>
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center p-12 text-slate-500 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16] rounded-2xl">
+              <div className="h-full flex items-center justify-center p-12 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16] rounded-2xl">
                 Select a task to inspect agent handoffs and verification deliverables.
               </div>
             )}
@@ -466,13 +466,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onBackToStore, cur
               <Terminal className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
               <span>Real-Time Orchestration Telemetry &amp; Handoff Logs</span>
             </h3>
-            <span className="text-[11px] font-mono text-slate-500">Append-Only Audit Stream</span>
+            <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400">Append-Only Audit Stream</span>
           </div>
 
           <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs max-h-56 overflow-y-auto space-y-2">
             {logs.map((log) => (
               <div key={log.id} className="flex items-start gap-3">
-                <span className="text-slate-500 text-[10px] shrink-0 pt-0.5">
+                <span className="text-slate-400 text-[10px] shrink-0 pt-0.5">
                   {new Date(log.timestamp).toLocaleTimeString()}
                 </span>
                 <span

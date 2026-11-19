@@ -107,9 +107,9 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400">
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-300">
             <Flame className="w-3.5 h-3.5 text-amber-400" />
-            <span>Over 2,400 orders placed in India today</span>
+            <span>Pan-India Express Dispatch · 24-Hour Fulfillment</span>
           </div>
         </div>
 
@@ -125,8 +125,8 @@ export const Hero: React.FC<HeroProps> = ({
                 <Sparkles className="w-4 h-4 text-cyan-400" />
                 <span>NEXORA V3 PREMIER MARKETPLACE</span>
               </span>
-              <span aria-hidden="true" className="text-slate-600">·</span>
-              <span className="text-slate-400">DIRECT FROM VERIFIED STUDIOS</span>
+              <span aria-hidden="true" className="text-slate-500">·</span>
+              <span className="text-slate-300">DIRECT FROM VERIFIED STUDIOS</span>
             </div>
 
             {/* Main Headline */}
@@ -142,7 +142,7 @@ export const Hero: React.FC<HeroProps> = ({
             <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
               India's premier multi-vendor e-commerce destination. Connecting verified acoustic labs,
               artisanal mechanical workshops, and designer studios directly with discerning buyers.
-              Zero counterfeit risk, transparent GST pricing, and Razorpay-protected settlements.
+              Zero counterfeit risk, transparent GST pricing, and verified sandbox payment settlements.
             </p>
 
             {/* CALL TO ACTION BUTTONS */}
@@ -170,11 +170,11 @@ export const Hero: React.FC<HeroProps> = ({
                 <ExternalLink className="w-4 h-4 text-slate-400" />
               </button>
 
-              {/* NOVA AI Quick Access Button */}
+              {/* NOVA AI Quick Access Button (Outlined Ghost Hierarchy) */}
               <button
                 type="button"
                 onClick={onOpenNovaAssistant}
-                className="inline-flex items-center gap-1.5 px-4 py-3.5 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-800/60 text-cyan-300 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-3.5 bg-transparent hover:bg-cyan-500/10 border border-cyan-400/70 hover:border-cyan-300 text-cyan-300 font-semibold text-xs rounded-xl transition-all cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Ask NOVA AI</span>
@@ -182,14 +182,14 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
 
             {/* Key Trust Checkmarks */}
-            <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center gap-6 text-xs text-slate-400">
+            <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center gap-6 text-xs text-slate-300">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
                 <span>Free Pan-India Delivery &gt; ₹999</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>Razorpay Test Gateway Ready</span>
+                <span>Razorpay Sandbox Test Mode</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />

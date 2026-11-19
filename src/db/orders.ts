@@ -120,6 +120,21 @@ export async function updateUserOrderStateSql(
   }
 }
 
+export async function getOrderOwnerUidByCode(orderCode: string): Promise<string | null> {
+  try {
+    const rows = await sqlDb
+      .select({ uid: users.uid })
+      .from(orders)
+      .innerJoin(users, eq(orders.userId, users.id))
+      .where(eq(orders.orderCode, orderCode))
+      .limit(1);
+    return rows[0]?.uid ?? null;
+  } catch (error) {
+    console.error('Database query failed in getOrderOwnerUidByCode:', error);
+    return null;
+  }
+}
+
 export async function getUserBulkInquiriesByUid(uid: string): Promise<BulkOrderInquiry[]> {
   try {
     const rows = await sqlDb

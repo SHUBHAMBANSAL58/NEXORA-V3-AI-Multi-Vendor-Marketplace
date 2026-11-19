@@ -16,12 +16,14 @@ import {
   requireRole,
 } from './src/middleware/auth.ts';
 import {
+  getOrderOwnerUidByCode,
   getUserBulkInquiriesByUid,
   getUserOrdersByUid,
   saveUserBulkInquiry,
   saveUserOrder,
   updateUserOrderStateSql,
 } from './src/db/orders.ts';
+import { canUserAccessOrder, verifyRazorpayWebhookRequest } from './src/server/security.ts';
 import { getOrCreateUser, getUserByUid, updateUserLoyaltyAndWallet } from './src/db/users.ts';
 import {
   applyOrderWalletAndPoints,
@@ -470,16 +472,13 @@ apiRouter.post('/payments/verify', writeLimiter, (req: Request, res: Response) =
 });
 
 apiRouter.post('/webhooks/razorpay', (req: Request, res: Response) => {
-  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (webhookSecret) {
-    const sig = req.headers['x-razorpay-signature'];
-    const expected = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(req.body || {}))
-      .digest('hex');
-    if (sig !== expected) {
-      return res.status(401).json({ success: false, error: 'Invalid webhook signature.' });
-    }
+  const result = verifyRazorpayWebhookRequest(
+    req.body,
+    req.headers['x-razorpay-signature'],
+    process.env.RAZORPAY_WEBHOOK_SECRET
+  );
+  if (!result.ok) {
+    return res.status(result.status).json({ success: false, error: result.error });
   }
   return res.json({ success: true, received: true });
 });
@@ -619,9 +618,43 @@ apiRouter.post('/orders', writeLimiter, requireAuth, async (req: AuthRequest, re
   }
 });
 
+async function verifyCallerOwnsOrder(req: AuthRequest, orderId: string): Promise<{ allowed: boolean; status?: number; error?: string }> {
+  if (req.userRole === 'admin') return { allowed: true };
+  const sqlOwnerUid = await getOrderOwnerUidByCode(orderId);
+  let callerOrderIds: string[] = [];
+  try {
+    const callerOrders = await getUserOrdersByUid(req.user!.uid);
+    callerOrderIds = callerOrders.map((o) => o.id);
+  } catch {
+    callerOrderIds = [];
+  }
+
+  const repoOrder = await db.getOrderById(orderId);
+  if (!repoOrder && sqlOwnerUid === null && !callerOrderIds.includes(orderId)) {
+    return { allowed: false, status: 404, error: 'Order not found.' };
+  }
+
+  const allowed = canUserAccessOrder({
+    callerUid: req.user!.uid,
+    callerRole: req.userRole,
+    sqlOwnerUid,
+    callerSqlOrderIds: callerOrderIds,
+    orderId,
+  });
+  if (!allowed) {
+    return { allowed: false, status: 403, error: 'You do not have permission to modify this order.' };
+  }
+  return { allowed: true };
+}
+
 // 5b. Customer Order Self-Service Cancellation & Return Request
 apiRouter.post('/orders/:id/cancel', writeLimiter, requireAuth, async (req: AuthRequest, res: Response) => {
   const orderId = req.params.id;
+  const ownership = await verifyCallerOwnsOrder(req, orderId);
+  if (!ownership.allowed) {
+    return res.status(ownership.status || 403).json({ success: false, error: ownership.error });
+  }
+
   const reason = typeof req.body?.reason === 'string' && req.body.reason.trim()
     ? req.body.reason.trim().slice(0, 200)
     : 'Cancelled by customer before dispatch';
@@ -654,6 +687,26 @@ apiRouter.post('/orders/:id/cancel', writeLimiter, requireAuth, async (req: Auth
 
 apiRouter.post('/orders/:id/return', writeLimiter, requireAuth, async (req: AuthRequest, res: Response) => {
   const orderId = req.params.id;
+  const ownership = await verifyCallerOwnsOrder(req, orderId);
+  if (!ownership.allowed) {
+    return res.status(ownership.status || 403).json({ success: false, error: ownership.error });
+  }
+
+  const existingOrder = await db.getOrderById(orderId);
+  if (!existingOrder) {
+    return res.status(404).json({ success: false, error: 'Order not found.' });
+  }
+  if (
+    existingOrder.status === 'Cancelled' ||
+    existingOrder.status === 'Return Requested' ||
+    existingOrder.status === 'Returned'
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: `Return cannot be requested for order in status "${existingOrder.status}".`,
+    });
+  }
+
   const reason = typeof req.body?.reason === 'string' && req.body.reason.trim()
     ? req.body.reason.trim().slice(0, 240)
     : 'Size / specification mismatch';
@@ -949,6 +1002,15 @@ apiRouter.patch(
     if (!nextStage) {
       return res.status(400).json({ success: false, error: 'trackingStage is required.' });
     }
+    if (req.userRole !== 'admin') {
+      const sellerOrders = await db.getOrdersForSeller(req.sellerId || '');
+      if (!sellerOrders.some((o) => o.id === req.params.id)) {
+        return res.status(403).json({
+          success: false,
+          error: 'You can only update orders containing your store products.',
+        });
+      }
+    }
     const result = await db.updateOrderStage(req.params.id, nextStage);
     if (!result.ok || !result.order) {
       return res.status(400).json({ success: false, error: result.error });
@@ -971,10 +1033,20 @@ apiRouter.patch(
     if (!['Pending Review', 'Accepted', 'Negotiation'].includes(status)) {
       return res.status(400).json({ success: false, error: 'Invalid inquiry status.' });
     }
-    const updated = await db.updateBulkInquiryStatus(req.params.id, status);
-    if (!updated) {
+    const existing = await db.getBulkInquiryById(req.params.id);
+    if (!existing) {
       return res.status(404).json({ success: false, error: 'Inquiry not found.' });
     }
+    if (req.userRole !== 'admin') {
+      const seller = await db.getSellerById(req.sellerId || '');
+      if (!seller || existing.sellerStoreName !== seller.storeName) {
+        return res.status(403).json({
+          success: false,
+          error: 'You can only respond to inquiries addressed to your store.',
+        });
+      }
+    }
+    const updated = await db.updateBulkInquiryStatus(req.params.id, status);
     return res.json({ success: true, data: updated });
   }
 );
@@ -1175,6 +1247,17 @@ apiRouter.get('/categories', async (_req: Request, res: Response) => {
     data: categories,
     total: categories.length,
     message: 'Categories retrieved successfully.',
+  });
+});
+
+// 9b. Public Sellers Directory API
+apiRouter.get('/sellers', async (_req: Request, res: Response) => {
+  const sellers = await db.getSellers();
+  res.json({
+    success: true,
+    data: sellers,
+    total: sellers.length,
+    message: 'Verified sellers retrieved successfully.',
   });
 });
 

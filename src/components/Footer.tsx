@@ -35,12 +35,12 @@ export const Footer: React.FC<FooterProps> = ({
                 NEXORA V3
               </span>
             </div>
-            <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm leading-relaxed">
               India's premier AI-powered multi-vendor e-commerce marketplace. Connecting verified Indian creators, studios, and labs with discerning patrons.
             </p>
-            <div className="flex items-center gap-2 text-slate-500">
-              <ShieldCheck className="w-4 h-4 text-cyan-500" />
-              <span>Razorpay Test Gateway · 100% Buyer Protection</span>
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+              <ShieldCheck className="w-4 h-4 text-cyan-700 dark:text-cyan-400 shrink-0" />
+              <span>Razorpay Sandbox Environment · 256-Bit Encrypted Testing</span>
             </div>
           </div>
 
@@ -230,8 +230,8 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 NEXORA Marketplace Inc. Built with Four-Agent Engineering Architecture.</p>
+        <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600 dark:text-slate-400">
+          <p>© 2026 NEXORA V3 Multi-Vendor Marketplace. All Rights Reserved.</p>
           <div className="flex items-center gap-4">
             <span>Primary Market: India (₹ INR)</span>
             <span aria-hidden="true">·</span>

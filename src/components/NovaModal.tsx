@@ -268,7 +268,7 @@ export const NovaModal: React.FC<NovaModalProps> = ({
                   {inferenceMode === 'offline-catalog-fallback' ? 'Catalog Fallback' : 'Gemini Live'}
                 </span>
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 Live catalog & verified seller intelligence
               </p>
             </div>
@@ -276,7 +276,7 @@ export const NovaModal: React.FC<NovaModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 cursor-pointer"
             aria-label="Close assistant"
           >
             <X className="w-5 h-5" />
@@ -312,7 +312,7 @@ export const NovaModal: React.FC<NovaModalProps> = ({
                 <button
                   type="button"
                   onClick={() => void handleSend(m.suggestion!)}
-                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-cyan-600 dark:text-cyan-400 hover:underline font-medium cursor-pointer"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-cyan-700 dark:text-cyan-400 hover:underline font-medium cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>Try: {m.suggestion}</span>

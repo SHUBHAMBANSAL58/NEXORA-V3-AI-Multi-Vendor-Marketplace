@@ -128,25 +128,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
             <span>NEXORA V3 Exclusive Marketplace · Pan-India Express Delivery</span>
           </span>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-4 text-slate-300">
             <span>Currency: INR (₹)</span>
             <span aria-hidden="true">·</span>
-            <span>Razorpay Secured</span>
+            <span>Payment Sandbox Active</span>
             <button
               type="button"
               onClick={onOpenNovaAssistant}
-              className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-1 cursor-pointer"
+              className="text-cyan-300 hover:text-cyan-200 font-medium inline-flex items-center gap-1 cursor-pointer"
             >
               <Sparkles className="w-3 h-3" />
               <span>Ask NOVA AI</span>
             </button>
             <span aria-hidden="true">·</span>
             <button
+              type="button"
               onClick={onOpenCommandCenter}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+              title="Support Center"
+              aria-label="Open NEXORA Support Center"
+              className="text-indigo-300 hover:text-indigo-200 font-semibold inline-flex items-center gap-1 cursor-pointer"
             >
               <Cpu className="w-3 h-3" />
-              <span>4-Agent Command Center</span>
+              <span>Support Center</span>
             </button>
           </div>
         </div>
@@ -170,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors">
                   NEXORA
                 </span>
-                <span className="text-[9px] tracking-widest uppercase font-semibold text-slate-400 dark:text-slate-500 hidden sm:block">
+                <span className="text-[9px] tracking-widest uppercase font-semibold text-slate-600 dark:text-slate-400 hidden sm:block">
                   Marketplace
                 </span>
               </div>
@@ -209,7 +212,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded shadow-xs">
+                  <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded shadow-xs">
                     /
                   </kbd>
                 </div>
@@ -219,7 +222,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Live Search Autocomplete Dropdown */}
             {isSearchFocused && (
               <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-50 transition-all">
-                <div className="p-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <div className="p-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Popular suggestions</span>
                   <span>Press Esc to close</span>
                 </div>
@@ -237,31 +240,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                         className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 flex items-center justify-between group transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-500" />
+                          <Search className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400" />
                           <span>{item.title}</span>
-                          <span className="text-xs text-slate-400 dark:text-slate-500">
+                          <span className="text-xs text-slate-600 dark:text-slate-400">
                             in {item.category}
                           </span>
                         </div>
-                        <span className="text-xs font-mono font-medium text-cyan-600 dark:text-cyan-400">
+                        <span className="text-xs font-mono font-medium text-cyan-700 dark:text-cyan-400">
                           {item.price}
                         </span>
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                    <div className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
                       No matching products found for "{searchQuery}". Try "Aura", "Keyboard", or "Audio".
                     </div>
                   )}
                 </div>
-                <div className="p-2 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                <div className="p-2 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Looking for custom vendor inventory?</span>
                   <button
+                    type="button"
                     onClick={() => {
                       setIsSearchFocused(false);
                       onSearchSubmit?.(searchQuery);
                     }}
-                    className="text-cyan-600 dark:text-cyan-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    className="text-cyan-700 dark:text-cyan-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
                   >
                     <span>View all results</span>
                     <ArrowRight className="w-3 h-3" />
@@ -324,15 +328,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* Command Center Quick Access */}
+            {/* Support Center Quick Access */}
             <button
               type="button"
               onClick={onOpenCommandCenter}
-              className="hidden sm:inline-flex p-2 text-indigo-500 hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-              aria-label="Open NEXORA 4-Agent Command Center"
-              title="Four-Agent Command Center"
+              className="hidden sm:inline-flex p-2 text-indigo-700 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              aria-label="Open NEXORA Support Center"
+              title="Support Center"
             >
-              <Cpu className="w-5 h-5 text-indigo-400" />
+              <Cpu className="w-5 h-5" />
             </button>
 
             {/* USER PROFILE & DROPDOWN */}
@@ -354,11 +358,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                     {currentUser ? currentUser.name.split(' ')[0] : 'Shubham'}
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                  <span className="text-[10px] text-slate-600 dark:text-slate-400 leading-tight">
                     Account & Orders
                   </span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:block" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 hidden lg:block" />
               </button>
 
               {/* Accessible Profile Menu Dropdown */}
@@ -376,13 +380,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span className="text-sm font-semibold text-slate-900 dark:text-white">
                           {currentUser ? currentUser.name : 'Shubham Bansal'}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[170px]">
+                        <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[170px]">
                           {currentUser ? currentUser.email : 'bansalshubham662@gmail.com'}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 p-2 rounded-md">
-                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                    <div className="mt-2.5 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 p-2 rounded-md">
+                      <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
                         <ShieldCheck className="w-3.5 h-3.5" />
                         {currentUser?.role === 'customer'
                           ? 'Verified Customer'
@@ -454,13 +458,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                           onOpenUserAccount?.('profile');
                         }
                       }}
-                      className="w-full flex items-center justify-between px-4 py-2 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-colors font-medium text-left cursor-pointer"
+                      className="w-full flex items-center justify-between px-4 py-2 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-colors font-medium text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <Store className="w-4 h-4" />
                         <span>Seller Central Hub</span>
                       </div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/60 text-cyan-800 dark:text-cyan-300">
                         Vendor
                       </span>
                     </button>
@@ -474,13 +478,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                           onOpenUserAccount?.('profile');
                         }
                       }}
-                      className="w-full flex items-center justify-between px-4 py-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors font-medium text-left cursor-pointer"
+                      className="w-full flex items-center justify-between px-4 py-2 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors font-medium text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <SlidersHorizontal className="w-4 h-4" />
                         <span>Admin Governance</span>
                       </div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300">
                         Admin
                       </span>
                     </button>
@@ -490,14 +494,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsProfileOpen(false);
                         onOpenCommandCenter?.();
                       }}
-                      className="w-full flex items-center justify-between px-4 py-2 text-indigo-400 hover:bg-indigo-950/30 transition-colors font-medium text-left cursor-pointer"
+                      className="w-full flex items-center justify-between px-4 py-2 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors font-medium text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <Cpu className="w-4 h-4 text-indigo-400" />
-                        <span>Command Center</span>
+                        <Cpu className="w-4 h-4" />
+                        <span>Support Center</span>
                       </div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-900/60 text-indigo-300">
-                        4-Agent
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300">
+                        24/7
                       </span>
                     </button>
                   </div>
@@ -586,7 +590,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
-          <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 shrink-0">
+          <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300 shrink-0">
             <button
               type="button"
               onClick={() => onQuickFilter?.('top-sellers')}
@@ -630,7 +634,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                     {currentUser ? currentUser.name : 'Shubham Bansal'}
                   </h4>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
                     {currentUser ? currentUser.email : 'bansalshubham662@gmail.com'}
                   </p>
                 </div>
@@ -638,7 +642,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Mobile Category Links */}
               <div>
-                <h5 className="text-xs uppercase font-bold tracking-wider text-slate-400 mb-3">
+                <h5 className="text-xs uppercase font-bold tracking-wider text-slate-600 dark:text-slate-400 mb-3">
                   Shop By Category
                 </h5>
                 <ul className="space-y-2">
@@ -649,7 +653,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           onSelectCategory?.(cat.slug);
                           setIsMobileMenuOpen(false);
                         }}
-                        className="w-full text-left py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-cyan-500"
+                        className="w-full text-left py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400"
                       >
                         {cat.name}
                       </button>
@@ -670,7 +674,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onOpenUserAccount?.('profile');
                     }
                   }}
-                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 cursor-pointer"
+                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-cyan-700 dark:text-cyan-400 cursor-pointer"
                 >
                   <Store className="w-4 h-4" />
                   <span>Seller Central Hub</span>
@@ -685,7 +689,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onOpenUserAccount?.('profile');
                     }
                   }}
-                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer"
+                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-400 cursor-pointer"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   <span>Admin Governance</span>
@@ -696,7 +700,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsMobileMenuOpen(false);
                     onOpenUserAccount?.('orders');
                   }}
-                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer"
+                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
                 >
                   <Package className="w-4 h-4" />
                   <span>Track Orders</span>
@@ -707,15 +711,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsMobileMenuOpen(false);
                     onOpenCommandCenter?.();
                   }}
-                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer"
+                  className="w-full flex items-center gap-2 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-400 cursor-pointer"
                 >
                   <Cpu className="w-4 h-4" />
-                  <span>4-Agent Command Center</span>
+                  <span>Support Center</span>
                 </button>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
               <p>NEXORA V3 · All Rights Reserved</p>
               <p className="mt-1">Primary Market: India (₹ INR)</p>
             </div>

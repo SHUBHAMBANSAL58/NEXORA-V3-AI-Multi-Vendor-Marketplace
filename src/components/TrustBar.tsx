@@ -20,7 +20,7 @@ export const TrustBar: React.FC = () => {
     },
     {
       icon: CreditCard,
-      title: 'Razorpay Test Mode',
+      title: 'Secure Payment Testing',
       description: 'UPI, Cards, NetBanking, and COD',
     },
   ];
@@ -33,14 +33,14 @@ export const TrustBar: React.FC = () => {
             const Icon = item.icon;
             return (
               <div key={index} className="flex items-start gap-3.5 group">
-                <div className="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/50 group-hover:scale-105 transition-transform shrink-0">
+                <div className="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/50 group-hover:scale-105 transition-transform shrink-0">
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                     {item.title}
                   </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                     {item.description}
                   </p>
                 </div>

@@ -369,14 +369,14 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
         className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 flex items-center justify-between gap-3 text-xs"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 flex items-center justify-center shrink-0">
             <Truck className="w-5 h-5" />
           </div>
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white">
               Real-Time Package Tracking Map
             </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
               Place an order to visualize real-time courier dispatch routes and doorstep ETA.
             </p>
           </div>
@@ -423,7 +423,7 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
               {telemetry.courierDisplayName} · AWB:{' '}
               <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
                 {telemetry.trackingNumber}
@@ -492,10 +492,10 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
                 key={stageName}
                 className={`inline-flex items-center gap-1 font-medium ${
                   current
-                    ? 'text-cyan-600 dark:text-cyan-400 font-bold'
+                    ? 'text-cyan-700 dark:text-cyan-400 font-bold'
                     : reached
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-slate-400 dark:text-slate-500'
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
                 <span
@@ -535,9 +535,9 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
       {/* Live Telemetry Footer Strip */}
       <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/50 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Navigation className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+          <Navigation className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-500 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[9px] uppercase font-mono text-slate-400 block">
+            <span className="text-[9px] uppercase font-mono text-slate-600 dark:text-slate-400 block">
               Speed &amp; Heading
             </span>
             <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
@@ -547,9 +547,9 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5 min-w-0">
-          <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+          <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[9px] uppercase font-mono text-slate-400 block">
+            <span className="text-[9px] uppercase font-mono text-slate-600 dark:text-slate-400 block">
               Remaining / ETA
             </span>
             <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
@@ -559,9 +559,9 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5 min-w-0">
-          <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+          <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-500 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[9px] uppercase font-mono text-slate-400 block">
+            <span className="text-[9px] uppercase font-mono text-slate-600 dark:text-slate-400 block">
               GPS Coordinates
             </span>
             <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
@@ -580,7 +580,7 @@ export const CourierLiveMap: React.FC<CourierLiveMapProps> = ({
               Inspect Checkpoints
             </button>
           ) : (
-            <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold truncate">
+            <span className="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 font-semibold truncate">
               Next: {telemetry.nextCheckpointLabel}
             </span>
           )}

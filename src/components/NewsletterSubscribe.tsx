@@ -137,7 +137,7 @@ export const NewsletterSubscribe: React.FC<NewsletterSubscribeProps> = ({
             </h3>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Join 42,000+ discerning creators and engineers. Receive private batch releases, architectural teardowns, and an instant <strong>₹500 welcome credit</strong>.
+              Join discerning creators and studio engineers across India. Receive private batch releases, architectural teardowns, and an instant <strong>₹500 welcome credit</strong>.
             </p>
           </div>
 

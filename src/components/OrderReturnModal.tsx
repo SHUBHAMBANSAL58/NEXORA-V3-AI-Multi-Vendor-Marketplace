@@ -88,20 +88,21 @@ export const OrderReturnModal: React.FC<OrderReturnModalProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Close return modal"
+          className="absolute top-4 right-4 p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 flex items-center justify-center">
             <RotateCcw className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Initiate Return & Reverse Pickup
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Order Ref: <span className="font-mono font-bold">{order.id}</span>
             </p>
           </div>
@@ -109,7 +110,7 @@ export const OrderReturnModal: React.FC<OrderReturnModalProps> = ({
 
         {/* Order mini summary */}
         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2 mb-4 text-xs">
-          <div className="flex justify-between text-slate-500">
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
             <span>Delivered On: {order.date}</span>
             <span className="font-mono font-bold text-slate-900 dark:text-white">
               Refund Value: {formatCurrencyINR(order.totalPaise)}
@@ -171,7 +172,7 @@ export const OrderReturnModal: React.FC<OrderReturnModalProps> = ({
                 }`}
               >
                 <p className="font-bold">Original Payment Method</p>
-                <p className="text-[10px] text-slate-500">2-4 business days</p>
+                <p className="text-[10px] text-slate-600 dark:text-slate-400">2-4 business days</p>
               </button>
 
               <button

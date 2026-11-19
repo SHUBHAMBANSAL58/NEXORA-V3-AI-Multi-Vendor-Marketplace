@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import { DatabaseEngine } from './db.js';
 import { buildOfflineCatalogReply } from './novaService.js';
+import { verifyRazorpayWebhookRequest, canUserAccessOrder } from './security.js';
+import {
+  VALID_PROMO_CODES,
+  validatePromoCode,
+  calculateCategoryProductCounts,
+} from '../utils/commerceFeatures.js';
 
 test('DatabaseEngine supports seller onboarding, product CRUD, moderation, and category recount', async () => {
   const engine = new DatabaseEngine(false);
@@ -147,4 +154,103 @@ test('buildOfflineCatalogReply recommends matching live catalog product transpar
   assert.equal(reply.mode, 'offline-catalog-fallback');
   assert.ok(reply.reply.includes('₹'));
   assert.ok(reply.recommendedProductTitle);
+});
+
+test('verifyRazorpayWebhookRequest enforces fail-closed HMAC-SHA256 verification', () => {
+  const payload = JSON.stringify({ event: 'payment.captured', id: 'pay_123' });
+
+  // 503 when webhook secret is not configured
+  const missingSecret = verifyRazorpayWebhookRequest(payload, 'any-sig', '');
+  assert.equal(missingSecret.ok, false);
+  assert.equal(missingSecret.status, 503);
+
+  // 401 when signature header is missing
+  const missingHeader = verifyRazorpayWebhookRequest(payload, undefined, 'top-secret-key');
+  assert.equal(missingHeader.ok, false);
+  assert.equal(missingHeader.status, 401);
+
+  // 401 when signature is invalid
+  const invalidSig = verifyRazorpayWebhookRequest(payload, '0000deadbeef', 'top-secret-key');
+  assert.equal(invalidSig.ok, false);
+  assert.equal(invalidSig.status, 401);
+
+  // 200 when valid HMAC-SHA256 signature matches
+  const validHex = crypto.createHmac('sha256', 'top-secret-key').update(payload).digest('hex');
+  const validRes = verifyRazorpayWebhookRequest(payload, validHex, 'top-secret-key');
+  assert.equal(validRes.ok, true);
+  assert.equal(validRes.status, 200);
+});
+
+test('canUserAccessOrder permits owner or admin role and denies unrelated callers', () => {
+  assert.equal(
+    canUserAccessOrder({
+      callerUid: 'admin-1',
+      callerRole: 'admin',
+      sqlOwnerUid: 'cust-1',
+      callerSqlOrderIds: [],
+      orderId: 'NEX-ORD-1',
+    }),
+    true
+  );
+
+  assert.equal(
+    canUserAccessOrder({
+      callerUid: 'cust-1',
+      callerRole: 'customer',
+      sqlOwnerUid: 'cust-1',
+      callerSqlOrderIds: [],
+      orderId: 'NEX-ORD-1',
+    }),
+    true
+  );
+
+  assert.equal(
+    canUserAccessOrder({
+      callerUid: 'cust-2',
+      callerRole: 'customer',
+      sqlOwnerUid: 'cust-1',
+      callerSqlOrderIds: ['NEX-ORD-1'],
+      orderId: 'NEX-ORD-1',
+    }),
+    false
+  );
+
+  assert.equal(
+    canUserAccessOrder({
+      callerUid: 'cust-2',
+      callerRole: 'customer',
+      sqlOwnerUid: null,
+      callerSqlOrderIds: ['NEX-ORD-99'],
+      orderId: 'NEX-ORD-1',
+    }),
+    false
+  );
+});
+
+test('validatePromoCode rejects inactive coupons and calculateCategoryProductCounts excludes unpublished SKUs', () => {
+  const inactiveCatalog = {
+    ...VALID_PROMO_CODES,
+    PAUSED25: {
+      code: 'PAUSED25',
+      type: 'percentage' as const,
+      value: 25,
+      minSpendPaise: 10000,
+      description: 'Paused promo',
+      isActive: false,
+    },
+  };
+
+  const res = validatePromoCode('PAUSED25', 500000, inactiveCatalog);
+  assert.equal(res.valid, false);
+
+  const counts = calculateCategoryProductCounts([
+    { categorySlug: 'audio', isPublished: true },
+    { categorySlug: 'audio', isPublished: false },
+    { categorySlug: 'smartphones', isPublished: true },
+    { categorySlug: 'keyboards', isPublished: false },
+  ]);
+  assert.equal(counts.all, 2);
+  assert.equal(counts.audio, 1);
+  assert.equal(counts.smartphones, 1);
+  assert.equal(counts.keyboards, undefined);
 });

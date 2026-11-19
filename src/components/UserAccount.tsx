@@ -119,7 +119,7 @@ export const DEMO_USERS: Record<string, UserProfile> = {
         estimatedDeliveryDate: 'Tomorrow by 8:00 PM',
         preferredDeliveryDate: 'Friday, 13 Nov 2026',
         orderNotes: 'Please ring bell twice and leave package with security concierge at Tower B reception.',
-        paymentMethod: 'UPI (Razorpay Verified)',
+        paymentMethod: 'UPI (Razorpay Sandbox)',
         items: [
           {
             title: 'Sennheiser Momentum 4 Wireless Flagship',
@@ -141,7 +141,7 @@ export const DEMO_USERS: Record<string, UserProfile> = {
         estimatedDeliveryDate: 'Delivered on 08 Nov',
         preferredDeliveryDate: 'Friday, 08 Nov 2026',
         orderNotes: 'Deliver after 3 PM. Call customer phone on approach.',
-        paymentMethod: 'UPI (Razorpay Verified)',
+        paymentMethod: 'UPI (Razorpay Sandbox)',
         items: [
           {
             title: 'NEXORA Aura Pulse Pro (Obsidian Black)',
@@ -209,7 +209,7 @@ export const DEMO_USERS: Record<string, UserProfile> = {
         courierPartner: 'BlueDart Air Apex',
         trackingNumber: 'BLD-69128471',
         estimatedDeliveryDate: 'Delivered on 24 Sep',
-        paymentMethod: 'UPI (Razorpay Verified)',
+        paymentMethod: 'UPI (Razorpay Sandbox)',
         items: [
           {
             title: 'Nordic Chrono Ceramic Minimalist Watch',
@@ -249,7 +249,7 @@ export const DEMO_USERS: Record<string, UserProfile> = {
         courierPartner: 'BlueDart Express Air',
         trackingNumber: 'BLD-58402914',
         estimatedDeliveryDate: 'Delivered on 23 Jul',
-        paymentMethod: 'UPI (Razorpay Verified)',
+        paymentMethod: 'UPI (Razorpay Sandbox)',
         items: [
           {
             title: 'Artisan Full-Grain Leather Sleeve',
@@ -743,7 +743,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                   {currentUser.role}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 {currentUser.email}
               </p>
             </div>
@@ -752,7 +752,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Close user account modal"
           >
             <X className="w-5 h-5" />
@@ -850,15 +850,15 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                         </span>
                       ))}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       Member since Nov 2026 · Tier 1 Prime Authenticated
                     </p>
                     <div className="mt-1 flex items-center gap-2 text-xs">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                         ● Active Status
                       </span>
-                      <span className="text-slate-300 dark:text-slate-700">·</span>
-                      <span className="text-slate-500 dark:text-slate-400">
+                      <span className="text-slate-400 dark:text-slate-600">·</span>
+                      <span className="text-slate-600 dark:text-slate-400">
                         {currentUser.role === 'customer'
                           ? 'Verified Consumer'
                           : currentUser.role === 'seller'
@@ -872,7 +872,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingProfile(!isEditingProfile)}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800/80 rounded-lg hover:bg-cyan-100 transition-colors cursor-pointer"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800/80 rounded-lg hover:bg-cyan-100 transition-colors cursor-pointer"
                 >
                   {isEditingProfile ? 'Cancel Edit' : 'Edit Profile'}
                 </button>
@@ -918,13 +918,13 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                           <p className="font-semibold text-slate-900 dark:text-white truncate mt-0.5">
                             {inq.productTitle}
                           </p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400">
                             {inq.companyName} · Qty: <strong className="font-mono">{inq.quantity} units</strong> · Seller: {inq.sellerStoreName}
                           </p>
                         </div>
                         <div className="sm:text-right shrink-0">
-                          <span className="text-[10px] text-slate-400 block">Target Unit Offer</span>
-                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="text-[10px] text-slate-600 dark:text-slate-400 block">Target Unit Offer</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {formatCurrencyINR(inq.offeredUnitPaise)}
                           </span>
                         </div>
@@ -937,7 +937,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
               {/* Edit Profile Form */}
               {isEditingProfile ? (
                 <form onSubmit={handleSaveProfile} className="space-y-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                     Update Account Details
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -984,7 +984,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs mb-1">
                       <Mail className="w-3.5 h-3.5" />
                       <span>Email Address</span>
                     </div>
@@ -993,7 +993,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     </p>
                   </div>
                   <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs mb-1">
                       <Phone className="w-3.5 h-3.5" />
                       <span>Primary Phone</span>
                     </div>
@@ -1002,7 +1002,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     </p>
                   </div>
                   <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs mb-1">
                       <MapPin className="w-3.5 h-3.5" />
                       <span>Default Dispatch PIN</span>
                     </div>
@@ -1042,17 +1042,17 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                               {tier} Tier
                             </span>
                           </div>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-300 mt-0.5">
                             Earn 1 Point per ₹100 spent · 10 Points = ₹1.00 instant checkout credit
                           </p>
                         </div>
                       </div>
 
                       <div className="text-left sm:text-right">
-                        <span className="text-[10px] font-mono uppercase text-slate-400 block">Available Balance</span>
+                        <span className="text-[10px] font-mono uppercase text-slate-300 block">Available Balance</span>
                         <div className="flex items-baseline gap-1.5 sm:justify-end">
                           <span className="text-2xl font-black font-mono text-cyan-400">{points}</span>
-                          <span className="text-xs text-slate-300 font-semibold">Points</span>
+                          <span className="text-xs text-slate-200 font-semibold">Points</span>
                         </div>
                         <span className="text-[11px] text-emerald-400 font-mono font-medium block">
                           ≈ ₹{redeemValueINR} Redeemable Value
@@ -1062,7 +1062,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
 
                     {/* Tier Progress Meter */}
                     <div className="relative z-10 pt-4 space-y-2 text-xs">
-                      <div className="flex justify-between text-[11px] text-slate-400">
+                      <div className="flex justify-between text-[11px] text-slate-300">
                         <span>Current Tier: <strong className="text-white">{tier}</strong></span>
                         <span>{tier === 'Platinum' ? 'Highest Tier Unlocked' : `${Math.max(0, (tier === 'Silver' ? 500 : 1500) - points)} pts to next tier`}</span>
                       </div>
@@ -1072,7 +1072,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                           style={{ width: `${progressToNext}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-0.5">
+                      <div className="flex justify-between text-[10px] font-mono text-slate-400 pt-0.5">
                         <span className={tier === 'Silver' ? 'text-cyan-400 font-bold' : ''}>Silver (0+)</span>
                         <span className={tier === 'Gold' ? 'text-amber-400 font-bold' : ''}>Gold (500+)</span>
                         <span className={tier === 'Platinum' ? 'text-purple-400 font-bold' : ''}>Platinum (1,500+)</span>
@@ -1107,7 +1107,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
                       Stakeholder Preview Mode (Sandbox)
                     </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
                       Preview Customer, Seller, or Admin workspaces locally; privileged API writes still verify Firebase RBAC claims.
                     </p>
                   </div>
@@ -1123,10 +1123,10 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-1.5 text-xs font-semibold">
-                      <User className="w-3.5 h-3.5 text-cyan-500" />
+                      <User className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                       <span>Customer</span>
                     </div>
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5">Shubham Bansal</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 truncate mt-0.5">Shubham Bansal</p>
                   </button>
 
                   <button
@@ -1139,10 +1139,10 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-1.5 text-xs font-semibold">
-                      <Store className="w-3.5 h-3.5 text-indigo-500" />
+                      <Store className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                       <span>Vendor Partner</span>
                     </div>
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5">Lumina Soundworks</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 truncate mt-0.5">Lumina Soundworks</p>
                   </button>
 
                   <button
@@ -1155,10 +1155,10 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-1.5 text-xs font-semibold">
-                      <Building className="w-3.5 h-3.5 text-purple-500" />
+                      <Building className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                       <span>Admin Governance</span>
                     </div>
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5">Nexora Admin</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 truncate mt-0.5">Nexora Admin</p>
                   </button>
                 </div>
               </div>
@@ -1241,7 +1241,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                   <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                     Delivery Addresses in India
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     Used for hyper-local GST calculation and next-day express delivery.
                   </p>
                 </div>
@@ -1411,7 +1411,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                         <button
                           type="button"
                           onClick={() => handleSetDefaultAddress(addr.id)}
-                          className="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                          className="text-[10px] text-cyan-700 dark:text-cyan-400 hover:underline cursor-pointer"
                         >
                           Set as Default
                         </button>
@@ -1420,10 +1420,10 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                       {addr.street}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                       {addr.city}, {addr.state} — <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{addr.pinCode}</span>
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       Phone: {addr.phone}
                     </p>
 
@@ -1431,7 +1431,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDeleteAddress(addr.id)}
-                        className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                        className="text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1 cursor-pointer"
                         title="Delete address"
                         aria-label="Delete address"
                       >
@@ -1457,7 +1457,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       </span>
                     )}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     GST compliance invoices, doorstep tracking, and delivery instructions.
                   </p>
                 </div>
@@ -1483,7 +1483,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                         orderFilterTab === 'all'
                           ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold'
-                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                       }`}
                     >
                       All Orders ({currentUser.orders.length})
@@ -1493,8 +1493,8 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       onClick={() => setOrderFilterTab('notes')}
                       className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
                         orderFilterTab === 'notes'
-                          ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 font-semibold shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-400 font-semibold shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                       }`}
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
@@ -1513,7 +1513,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
                   >
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 block">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-600 dark:text-slate-400 block">
                         Total Spent
                       </span>
                       <span className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5 block">
@@ -1521,15 +1521,15 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       </span>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 block">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-600 dark:text-slate-400 block">
                         Orders & Items
                       </span>
-                      <span className="text-sm font-black font-mono text-cyan-600 dark:text-cyan-400 mt-0.5 block">
+                      <span className="text-sm font-black font-mono text-cyan-700 dark:text-cyan-400 mt-0.5 block">
                         {summary.orderCount} · {summary.totalItemsPurchased} items
                       </span>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 block">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-600 dark:text-slate-400 block">
                         Avg Order Value
                       </span>
                       <span className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5 block">
@@ -1537,7 +1537,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       </span>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 block">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-600 dark:text-slate-400 block">
                         Delivered / Active
                       </span>
                       <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
@@ -1584,9 +1584,9 @@ export const UserAccount: React.FC<UserAccountProps> = ({
 
                   {currentUser.orders.filter((o) => !!o.orderNotes).length === 0 ? (
                     <div className="p-8 text-center rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
-                      <MessageSquare className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500 font-medium">No order notes recorded yet.</p>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <MessageSquare className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">No order notes recorded yet.</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                         You can add custom delivery instructions (e.g., gate codes, ring doorbell twice) in the checkout modal.
                       </p>
                     </div>
@@ -1604,12 +1604,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 <span className="font-mono font-bold text-slate-900 dark:text-white">
                                   {order.id}
                                 </span>
-                                <span className="text-slate-400">·</span>
-                                <span className="text-slate-500">{order.date}</span>
+                                <span className="text-slate-600 dark:text-slate-400">·</span>
+                                <span className="text-slate-600 dark:text-slate-400">{order.date}</span>
                                 {order.preferredDeliveryDate && (
                                   <>
-                                    <span className="text-slate-400">·</span>
-                                    <span className="text-cyan-600 dark:text-cyan-400 font-medium flex items-center gap-1">
+                                    <span className="text-slate-600 dark:text-slate-400">·</span>
+                                    <span className="text-cyan-700 dark:text-cyan-400 font-medium flex items-center gap-1">
                                       <CalendarCheck className="w-3 h-3" />
                                       {order.preferredDeliveryDate}
                                     </span>
@@ -1631,12 +1631,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => handleCopyNotes(order.id, order.orderNotes!)}
-                                  className="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                                  className="text-[10px] text-cyan-700 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-sans"
                                 >
                                   {copiedNotesId === order.id ? (
                                     <>
                                       <Check className="w-3 h-3 text-emerald-500" />
-                                      <span className="text-emerald-500 font-bold">Copied!</span>
+                                      <span className="text-emerald-700 dark:text-emerald-400 font-bold">Copied!</span>
                                     </>
                                   ) : (
                                     <>
@@ -1652,19 +1652,19 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                             </div>
 
                             {/* Footer with Courier Compliance and Share */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-slate-400 pt-1">
                               <span>
                                 Assigned Courier: <strong>{order.courierPartner || 'BlueDart Express'}</strong> ({order.trackingNumber || 'BLD-9281'})
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleShareOrder(order)}
-                                className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                className="font-semibold text-cyan-700 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
                               >
                                 {copiedOrderId === order.id ? (
                                   <>
                                     <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    <span className="text-emerald-500">Copied!</span>
+                                    <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
                                   </>
                                 ) : (
                                   <>
@@ -1684,8 +1684,8 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 <div>
                   {currentUser.orders.length === 0 ? (
                     <div className="p-8 text-center rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
-                      <Package className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500">No past orders found in this account.</p>
+                      <Package className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs text-slate-600 dark:text-slate-400">No past orders found in this account.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -1706,8 +1706,8 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 <span className="font-mono font-semibold text-slate-900 dark:text-white">
                                   {order.id}
                                 </span>
-                                <span className="text-slate-300 dark:text-slate-700">·</span>
-                                <span className="text-slate-500">{order.date}</span>
+                                <span className="text-slate-400 dark:text-slate-600">·</span>
+                                <span className="text-slate-600 dark:text-slate-400">{order.date}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span
@@ -1758,7 +1758,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                     <p className="text-xs font-medium text-slate-900 dark:text-white truncate">
                                       {item.title}
                                     </p>
-                                    <p className="text-[11px] text-slate-500">
+                                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
                                       Qty: {item.quantity} · {formatCurrencyINR(item.pricePaise)} each
                                     </p>
                                   </div>
@@ -1819,14 +1819,14 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 <p className="text-[11px] text-slate-600 dark:text-slate-300">
                                   Reason: {order.returnInfo.reason}
                                 </p>
-                                <p className="text-[11px] text-slate-500">
+                                <p className="text-[11px] text-slate-600 dark:text-slate-400">
                                   Reverse Doorstep Pickup Scheduled: <strong>{order.returnInfo.pickupScheduledDate}</strong>
                                 </p>
                               </div>
                             )}
 
                             {/* Order Actions Toolbar */}
-                            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80">
+                            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80">
                               <span className="truncate max-w-[200px]">
                                 {order.courierPartner || 'BlueDart Express'} · {order.trackingNumber || 'BLD-9281'}
                               </span>
@@ -1836,13 +1836,13 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => handleShareOrder(order)}
-                                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-cyan-500 flex items-center gap-1 cursor-pointer transition-colors"
+                                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400 flex items-center gap-1 cursor-pointer transition-colors"
                                   title="Export or copy order summary"
                                 >
                                   {copiedOrderId === order.id ? (
                                     <>
                                       <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                      <span className="text-emerald-500">Copied!</span>
+                                      <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
                                     </>
                                   ) : (
                                     <>
@@ -1865,12 +1865,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                     }}
                                     className={`font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                                       focusedMapOrderId === order.id
-                                        ? 'text-cyan-600 dark:text-cyan-400 underline'
-                                        : 'text-slate-700 dark:text-slate-300 hover:text-cyan-500'
+                                        ? 'text-cyan-700 dark:text-cyan-400 underline'
+                                        : 'text-slate-700 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400'
                                     }`}
                                     aria-label={`View BlueDart Express route map for order ${order.id}`}
                                   >
-                                    <MapPin className="w-3.5 h-3.5 text-cyan-500" />
+                                    <MapPin className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                                     <span>{focusedMapOrderId === order.id ? 'On Live Map' : 'Route Map'}</span>
                                   </button>
                                 )}
@@ -1879,7 +1879,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => setTrackingOrder(order)}
-                                  className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer flex items-center gap-1"
+                                  className="font-semibold text-cyan-700 dark:text-cyan-400 hover:underline cursor-pointer flex items-center gap-1"
                                 >
                                   <Truck className="w-3.5 h-3.5" />
                                   <span>Track Live</span>
@@ -1968,7 +1968,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                   Sign in to your NEXORA Account
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Sync your cart, orders, GST invoices, and saved wishlist across sessions.
                 </p>
               </div>
@@ -1978,13 +1978,13 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 {firebaseUser ? (
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                         Signed in with Google
                       </p>
                       <p className="text-xs text-slate-700 dark:text-slate-200 truncate">
                         {firebaseUser.displayName || firebaseUser.email}
                       </p>
-                      <p className="text-[11px] text-slate-500 truncate">{firebaseUser.email}</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate">{firebaseUser.email}</p>
                     </div>
                     <button
                       type="button"
@@ -2080,7 +2080,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between text-xs pt-1">
-                  <label className="flex items-center gap-1.5 text-slate-500 cursor-pointer">
+                  <label className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 cursor-pointer">
                     <input type="checkbox" defaultChecked className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" />
                     <span>Remember this device</span>
                   </label>
@@ -2090,7 +2090,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                       setAuthSuccessMsg(`Password reset instructions sent to ${loginEmail || currentUser.email}.`);
                       setTimeout(() => setAuthSuccessMsg(null), 3500);
                     }}
-                    className="text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                    className="text-cyan-700 dark:text-cyan-400 hover:underline cursor-pointer"
                   >
                     Forgot password?
                   </button>
@@ -2107,7 +2107,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
 
               {/* Demo Logins */}
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2 text-center">
                   Or Instant Demo Stakeholder Logins:
                 </p>
                 <div className="grid grid-cols-3 gap-2">
@@ -2117,7 +2117,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-cyan-500 text-center text-xs cursor-pointer"
                   >
                     <span className="font-semibold block">Customer</span>
-                    <span className="text-[10px] text-slate-500">Shubham</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400">Shubham</span>
                   </button>
                   <button
                     type="button"
@@ -2125,7 +2125,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-cyan-500 text-center text-xs cursor-pointer"
                   >
                     <span className="font-semibold block">Vendor</span>
-                    <span className="text-[10px] text-slate-500">Lumina</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400">Lumina</span>
                   </button>
                   <button
                     type="button"
@@ -2133,7 +2133,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                     className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-cyan-500 text-center text-xs cursor-pointer"
                   >
                     <span className="font-semibold block">Admin</span>
-                    <span className="text-[10px] text-slate-500">Governance</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400">Governance</span>
                   </button>
                 </div>
               </div>
@@ -2147,7 +2147,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                   Create your NEXORA Account
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Join India's next-generation curated commerce ecosystem.
                 </p>
               </div>

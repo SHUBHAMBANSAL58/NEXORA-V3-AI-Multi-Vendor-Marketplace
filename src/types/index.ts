@@ -217,6 +217,7 @@ export interface AdminAuditLog {
 export interface CatalogProductWithMeta extends CatalogProduct {
   hsnCode?: string;
   isPublished?: boolean;
+  createdAt?: string;
 }
 
 export interface UserProfile {

@@ -121,9 +121,12 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   ];
   const faqSchema = buildProductFaqSchema(product, productFaqs);
 
+  const isSoldOut = product.stock <= 0;
+
   const handleAdd = () => {
+    if (isSoldOut) return;
     setIsAdded(true);
-    onAddToCart(product, quantity);
+    onAddToCart(product, Math.min(quantity, product.stock));
     setTimeout(() => {
       setIsAdded(false);
     }, 1800);
@@ -265,13 +268,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 <span className="font-semibold text-slate-900 dark:text-white block truncate">
                   {product.seller.storeName}
                 </span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-slate-600 dark:text-slate-400">
                   Verified Merchant · {product.seller.city}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-1 font-mono text-slate-700 dark:text-slate-300 shrink-0">
-              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <Star className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
               <span>{product.seller.rating}</span>
             </div>
           </div>
@@ -281,14 +284,14 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
         <div className="w-full md:w-1/2 p-4 sm:p-6 md:overflow-y-auto flex flex-col justify-between space-y-5">
           <div>
             {/* Header: Category & Rating */}
-            <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2 md:pr-10">
-              <span className="uppercase tracking-wider font-semibold text-cyan-600 dark:text-cyan-400">
+            <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-600 dark:text-slate-400 mb-2 md:pr-10">
+              <span className="uppercase tracking-wider font-semibold text-cyan-700 dark:text-cyan-400">
                 {product.category}
               </span>
               <div className="flex items-center gap-1 font-mono text-slate-700 dark:text-slate-300 shrink-0">
-                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <Star className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
                 <span className="font-bold">{product.rating}</span>
-                <span className="text-slate-400">({product.reviewCount} reviews)</span>
+                <span className="text-slate-600 dark:text-slate-400">({product.reviewCount} reviews)</span>
               </div>
             </div>
 
@@ -296,7 +299,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
               {product.title}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{product.tagline}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{product.tagline}</p>
 
             {/* Price Row */}
             <div className="mt-4 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
@@ -305,17 +308,23 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   {formatCurrencyINR(product.pricePaise)}
                 </span>
                 {product.originalPricePaise && (
-                  <span className="ml-2 text-xs line-through text-slate-400 font-mono">
+                  <span className="ml-2 text-xs line-through text-slate-600 dark:text-slate-400 font-mono">
                     {formatCurrencyINR(product.originalPricePaise)}
                   </span>
                 )}
-                <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <span className="block text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
                   Inclusive of 18% GST (HSN: {product.categorySlug === 'smartphones' ? '85171300' : '85183000'})
                 </span>
               </div>
-              <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded shrink-0">
-                In Stock ({product.stock} units)
-              </span>
+              {isSoldOut ? (
+                <span className="text-[11px] font-mono font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-1 rounded shrink-0">
+                  Out of Stock
+                </span>
+              ) : (
+                <span className="text-[11px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded shrink-0">
+                  In Stock ({product.stock} units)
+                </span>
+              )}
             </div>
 
             {/* High Inventory B2B Bulk Order Inquiry Banner */}
@@ -329,7 +338,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     <span className="font-bold text-indigo-950 dark:text-indigo-200 block text-[11px]">
                       High Inventory · B2B Wholesale Tier Available
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400">
                       Tiered bulk discounts from 15% to 30% for commercial orders
                     </span>
                   </div>
@@ -353,7 +362,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeTab === 'specs'
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 Overview & Specs
@@ -364,10 +373,10 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   activeTab === 'reviews'
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <MessageSquare className="w-3.5 h-3.5 text-cyan-500" />
+                <MessageSquare className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>Reviews ({productReviews.length || product.reviewCount})</span>
               </button>
               <button
@@ -376,10 +385,10 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   activeTab === 'share'
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Share2 className="w-3.5 h-3.5 text-cyan-500" />
+                <Share2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>Share</span>
               </button>
             </div>
@@ -387,21 +396,21 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             {/* TAB 1: SPECS, OVERVIEW & COMMUNITY Q&A */}
             {activeTab === 'specs' && (
               <div className="mt-4 space-y-4">
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                   {product.description}
                 </p>
 
                 {/* Technical Specifications Table */}
                 {product.specs && Object.keys(product.specs).length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-cyan-500" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400" />
                       <span>Technical Specifications</span>
                     </h4>
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                       {Object.entries(product.specs).map(([specKey, specVal]) => (
                         <div key={specKey} className="px-3.5 py-2 flex items-center justify-between gap-3">
-                          <span className="text-slate-500 dark:text-slate-400">{specKey}</span>
+                          <span className="text-slate-600 dark:text-slate-400">{specKey}</span>
                           <span className="font-medium text-slate-900 dark:text-white text-right">
                             {specVal}
                           </span>
@@ -413,7 +422,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
                 {/* Delivery Promise */}
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-cyan-50/50 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900 text-xs text-cyan-900 dark:text-cyan-300">
-                  <Truck className="w-4 h-4 text-cyan-500 shrink-0" />
+                  <Truck className="w-4 h-4 text-cyan-700 dark:text-cyan-400 shrink-0" />
                   <span>
                     Free Express Delivery to{' '}
                     <strong className="font-semibold">
@@ -425,14 +434,14 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
                 {/* Inline Quick Share Trigger */}
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
-                    <Share2 className="w-3.5 h-3.5 text-cyan-500" />
+                  <span className="text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                    <Share2 className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400" />
                     <span>Share with Creators &amp; Network</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => setActiveTab('share')}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 rounded-lg hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition-colors cursor-pointer"
+                    className="px-2.5 py-1 text-[11px] font-semibold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 rounded-lg hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition-colors cursor-pointer"
                   >
                     Copy Link &amp; Socials →
                   </button>
@@ -444,8 +453,8 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
                   />
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <HelpCircle className="w-3.5 h-3.5 text-cyan-500" />
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400" />
                     <span>Community Q&amp;A ({productFaqs.length})</span>
                   </h4>
 
@@ -458,10 +467,10 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                         <p className="font-semibold text-slate-900 dark:text-white">
                           Q: {faq.question}
                         </p>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
                           A: {faq.answer}
                         </p>
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                        <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 pt-0.5">
                           <span>Answered by {faq.answeredBy}</span>
                           <span>{faq.helpfulVotes} found helpful</span>
                         </div>
@@ -515,19 +524,21 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-900 text-xs">
               <button
                 type="button"
+                disabled={isSoldOut || quantity <= 1}
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                className="px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 aria-label="Decrease quantity"
               >
                 -
               </button>
               <span className="px-3 py-2 font-mono font-semibold text-slate-900 dark:text-white">
-                {quantity}
+                {isSoldOut ? 0 : quantity}
               </span>
               <button
                 type="button"
+                disabled={isSoldOut || quantity >= product.stock}
                 onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                className="px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                className="px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 aria-label="Increase quantity"
               >
                 +
@@ -537,14 +548,19 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             {/* Add to Bag Button */}
             <button
               type="button"
+              disabled={isSoldOut}
               onClick={handleAdd}
-              className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer ${
-                isAdded
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-slate-950'
+              className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-lg ${
+                isSoldOut
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed'
+                  : isAdded
+                  ? 'bg-emerald-600 text-white cursor-pointer'
+                  : 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-slate-950 cursor-pointer'
               }`}
             >
-              {isAdded ? (
+              {isSoldOut ? (
+                <span>Sold Out</span>
+              ) : isAdded ? (
                 <>
                   <Check className="w-4 h-4" />
                   <span>Added {quantity} to Bag</span>
@@ -564,8 +580,8 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 onClick={() => onToggleWishlist(product)}
                 className={`p-3 rounded-xl border transition-all cursor-pointer ${
                   isWishlisted
-                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-500'
-                    : 'border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:bg-slate-50 dark:hover:bg-slate-900'
+                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
+                    : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-50 dark:hover:bg-slate-900'
                 }`}
                 aria-label="Wishlist"
               >
@@ -584,15 +600,15 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
           product={product}
           currentUser={
             currentUser || {
-              id: 'usr-customer-01',
-              name: 'Shubham Bansal',
-              email: 'bansalshubham662@gmail.com',
+              id: 'usr-guest',
+              name: 'Guest Customer',
+              email: 'guest@nexora.market',
               phone: '+91 98765 43210',
               role: 'customer',
-              cartCount: 2,
-              wishlistCount: 4,
-              loyaltyPoints: 517,
-              tier: 'Gold',
+              cartCount: 0,
+              wishlistCount: 0,
+              loyaltyPoints: 0,
+              tier: 'Silver',
               addresses: [],
               orders: [],
             }
